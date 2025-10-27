@@ -1,3 +1,8 @@
+-- SendEmbedOnce_WithPlayers.lua
+-- Client-side script: ทำงานครั้งเดียวเมื่อรัน (LocalScript / Executor)
+-- รองรับ: syn.request, request, http_request, http.request, HttpService:PostAsync
+-- เพิ่ม field "Players" แสดงรูปแบบ current/max (เช่น 3/6)
+
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1432280942134820904/ExVKTvLfFjkbQ-1gR1BNimUY7wDNVey3Okh3C96ZDi09peBKdUzeVrYaaj8094NO1Ygl"
 local SERVER_IMAGE_URL = "https://img5.pic.in.th/file/secure-sv1/remix-77797a08-72e9-4e05-aa86-5bccff462ee2-removebg-preview912aeb8810af98ca.png"
 local THUMB_URL = "https://tr.rbxcdn.com/180DAY-5d6682eeb67b22411bc887ece1d4ec8f/256/256/Image/Webp/noFilter"
@@ -15,28 +20,24 @@ end
 local function tryExecutorRequest(req)
     -- คืน table { ok = bool, status = number?, body = string?, err = string? }
     local ok, res
-    -- syn.request
     if type(syn) == "table" and type(syn.request) == "function" then
         ok, res = pcall(function() return syn.request(req) end)
         if ok and res then return { ok = true, status = res.StatusCode or res.status, body = res.Body or res.body } end
         return { ok = false, err = tostring(res) }
     end
 
-    -- request (old)
     if type(request) == "function" then
         ok, res = pcall(function() return request(req) end)
         if ok and res then return { ok = true, status = res.StatusCode or res.status, body = res.Body or res.body } end
         return { ok = false, err = tostring(res) }
     end
 
-    -- http_request
     if type(http_request) == "function" then
         ok, res = pcall(function() return http_request(req) end)
         if ok and res then return { ok = true, status = res.StatusCode or res.status, body = res.Body or res.body } end
         return { ok = false, err = tostring(res) }
     end
 
-    -- http.request
     if type(http) == "table" and type(http.request) == "function" then
         ok, res = pcall(function() return http.request(req) end)
         if ok and res then return { ok = true, status = res.StatusCode or res.status, body = res.Body or res.body } end
@@ -108,31 +109,36 @@ local function findHalloweenLabel(timeout)
     return nil
 end
 
--- ---------- สร้าง Embed (ปรับตามคำขอ: Witch Cauldron เป็น field, Job ID ครอบด้วย backticks) ----------
-local function buildEmbed(textValue, jobId, playerName)
+-- ---------- สร้าง Embed (Witch Cauldron เป็น field, Job ID ครอบด้วย backticks, เพิ่ม Players field) ----------
+local function buildEmbed(textValue, jobId, playerName, playersField)
     local safeText = tostring(textValue or "Unknown")
     local safeJob = tostring(jobId or "Unknown")
     local safePlayer = tostring(playerName or "Unknown")
+    local safePlayersField = tostring(playersField or "-")
 
     local embed = {
         title = truncate("Raise Animals", 256),
-        description = truncate(("Raise Animals Notify By ATG Hub Request In <#1427270174498885632>"):format(safeText), 1024),
-        color = 1247221,
+        -- คำอธิบายสั้น ๆ (ปรับข้อความได้ตามต้องการ)
+        description = truncate("Raise Animals Notify By ATG Hub Request In <#1427270174498885632>", 1024),
+        color = 1247221, -- สีที่คุณเลือก (จาก RGB(19,7,245))
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
         thumbnail = { url = THUMB_URL },
         fields = {
-            -- Witch Cauldron เป็นหนึ่งใน fields (มีค่าที่ Label ให้มา และห่อด้วย backticks)
             {
                 name = "Witch Cauldron",
                 value = ("`%s`"):format(truncate(safeText, 1024)),
                 ["inline"] = false
             },
-            -- Job ID ครอบด้วย backticks ตามคำขอ
+            {
+                name = "Players",
+                value = ("`%s`"):format(truncate(safePlayersField, 1024)), -- ครอบด้วย backticks เช่น `3/6`
+                ["inline"] = false
+            },
             {
                 name = "Job ID",
                 value = ("`%s`"):format(truncate(safeJob, 1024)),
                 ["inline"] = false
-            },
+            }
         },
         footer = {
             text = "Notify ATG Hub",
@@ -153,12 +159,14 @@ local function main()
         player = Players.LocalPlayer
     end
     if not player then
+        warn("[Embed] ไม่พบ LocalPlayer")
         return
     end
 
     -- หา Label
     local label = findHalloweenLabel(6)
     if not label then
+        warn("[Embed] ไม่พบ workspace.Tycoons.Map.HalloweenWeather.UI.Bar.Label")
         return
     end
 
@@ -177,17 +185,30 @@ local function main()
         textValue = tostring(label)
     end
 
+    -- ดึงจำนวนผู้เล่นปัจจุบันและจำนวนสูงสุดของเซิร์ฟเวอร์
+    local currentPlayers = #Players:GetPlayers()
+    local maxPlayers = Players.MaxPlayers or 0
+    -- ถ้า MaxPlayers = 0 หรือไม่ถูกกำหนด ให้ใช้ "-" แทน หรือแสดงเป็น current/unknown
+    local playersFieldValue
+    if type(maxPlayers) == "number" and maxPlayers > 0 then
+        playersFieldValue = tostring(currentPlayers) .. "/" .. tostring(maxPlayers)
+    else
+        playersFieldValue = tostring(currentPlayers) .. "/?"
+    end
+
     local jobId = tostring(game.JobId or "Unknown")
     local playerName = player.Name or "Unknown"
 
-    -- สร้าง embed โดย Witch Cauldron เป็น field และ Job ID มี backticks
-    local embed = buildEmbed(textValue, jobId, playerName)
+    -- สร้าง embed โดย Witch Cauldron เป็น field และ Job ID มี backticks, เพิ่ม Players field
+    local embed = buildEmbed(textValue, jobId, playerName, playersFieldValue)
     local payload = { embeds = { embed } }
 
     -- ส่ง HTTP
     local ok, res = httpPostJson(WEBHOOK_URL, payload)
     if ok then
+        print("[Embed] ส่ง Embed สำเร็จ (Players: " .. playersFieldValue .. ", Job ID: " .. jobId .. ")")
     else
+        warn("[Embed] ส่ง Embed ล้มเหลว:", (res and res.err) or tostring(res))
     end
 end
 
@@ -199,4 +220,5 @@ if RunService:IsClient() then
         pcall(main)
     end)
 else
+    warn("[Embed] สคริปต์นี้ออกแบบมาสำหรับ client-side (LocalScript / executor), ไม่ใช่ server-side")
 end
