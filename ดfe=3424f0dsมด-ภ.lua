@@ -166,7 +166,6 @@ local function main()
     -- หา Label
     local label = findHalloweenLabel(6)
     if not label then
-        warn("[Embed] ไม่พบ workspace.Tycoons.Map.HalloweenWeather.UI.Bar.Label")
         return
     end
 
@@ -206,9 +205,7 @@ local function main()
     -- ส่ง HTTP
     local ok, res = httpPostJson(WEBHOOK_URL, payload)
     if ok then
-        print("[Embed] ส่ง Embed สำเร็จ (Players: " .. playersFieldValue .. ", Job ID: " .. jobId .. ")")
     else
-        warn("[Embed] ส่ง Embed ล้มเหลว:", (res and res.err) or tostring(res))
     end
 end
 
