@@ -119,7 +119,7 @@ local function buildEmbed(textValue, jobId, playerName, playersField)
     local embed = {
         title = truncate("Raise Animals", 256),
         -- คำอธิบายสั้น ๆ (ปรับข้อความได้ตามต้องการ)
-        description = truncate("Raise Animals Notify By ATG Hub Request In <#1427270174498885632>", 1024),
+        description = truncate("Raise Animals Notify By ATG Hub Request In <#1433333444544430141>", 1024),
         color = 1247221, -- สีที่คุณเลือก (จาก RGB(19,7,245))
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
         thumbnail = { url = THUMB_URL },
