@@ -1942,38 +1942,36 @@ end,
             v.AcrylicPaint.AddParent(v.Root)
         end
         
-        -- ========== ระบบ Resize ใหม่ (4 ขอบ + 4 มุม) ==========
+        -- ========== Enhanced Resize System (8-Direction) ==========
         local resizeHandles = {}
-        local resizeZones = {
-            -- 4 มุม
-            {pos = UDim2.new(0, -8, 0, -8), size = UDim2.fromOffset(16, 16), anchor = Vector2.new(0, 0), 
-             cursor = "rbxasset://SystemCursors/SizeNWSE", type = "corner", dir = "TopLeft"},
-            {pos = UDim2.new(1, -8, 0, -8), size = UDim2.fromOffset(16, 16), anchor = Vector2.new(1, 0), 
-             cursor = "rbxasset://SystemCursors/SizeNESW", type = "corner", dir = "TopRight"},
-            {pos = UDim2.new(0, -8, 1, -8), size = UDim2.fromOffset(16, 16), anchor = Vector2.new(0, 1), 
-             cursor = "rbxasset://SystemCursors/SizeNESW", type = "corner", dir = "BottomLeft"},
-            {pos = UDim2.new(1, -8, 1, -8), size = UDim2.fromOffset(16, 16), anchor = Vector2.new(1, 1), 
-             cursor = "rbxasset://SystemCursors/SizeNWSE", type = "corner", dir = "BottomRight"},
-            
-            -- 4 ขอบ
-            {pos = UDim2.new(0, 0, 0, -4), size = UDim2.new(1, 0, 0, 8), anchor = Vector2.new(0, 0), 
-             cursor = "rbxasset://SystemCursors/SizeNS", type = "edge", dir = "Top"},
-            {pos = UDim2.new(0, 0, 1, -4), size = UDim2.new(1, 0, 0, 8), anchor = Vector2.new(0, 1), 
-             cursor = "rbxasset://SystemCursors/SizeNS", type = "edge", dir = "Bottom"},
-            {pos = UDim2.new(0, -4, 0, 0), size = UDim2.new(0, 8, 1, 0), anchor = Vector2.new(0, 0), 
-             cursor = "rbxasset://SystemCursors/SizeEW", type = "edge", dir = "Left"},
-            {pos = UDim2.new(1, -4, 0, 0), size = UDim2.new(0, 8, 1, 0), anchor = Vector2.new(1, 0), 
-             cursor = "rbxasset://SystemCursors/SizeEW", type = "edge", dir = "Right"}
+        local currentResizeDirection = nil
+        local resizeDetectZone = 8 -- Pixel zone for edge detection
+        
+        -- Define all 8 resize directions (4 edges + 4 corners)
+        local resizeDirections = {
+            -- Corners
+            {name = "TopLeft", cursor = "rbxasset://SystemCursors/SizeNWSE", pos = UDim2.new(0, 0, 0, 0), size = UDim2.fromOffset(12, 12), anchor = Vector2.new(0, 0)},
+            {name = "TopRight", cursor = "rbxasset://SystemCursors/SizeNESW", pos = UDim2.new(1, 0, 0, 0), size = UDim2.fromOffset(12, 12), anchor = Vector2.new(1, 0)},
+            {name = "BottomLeft", cursor = "rbxasset://SystemCursors/SizeNESW", pos = UDim2.new(0, 0, 1, 0), size = UDim2.fromOffset(12, 12), anchor = Vector2.new(0, 1)},
+            {name = "BottomRight", cursor = "rbxasset://SystemCursors/SizeNWSE", pos = UDim2.new(1, 0, 1, 0), size = UDim2.fromOffset(12, 12), anchor = Vector2.new(1, 1)},
+            -- Edges
+            {name = "Top", cursor = "rbxasset://SystemCursors/SizeNS", pos = UDim2.new(0.5, 0, 0, 0), size = UDim2.new(1, -24, 0, 8), anchor = Vector2.new(0.5, 0)},
+            {name = "Bottom", cursor = "rbxasset://SystemCursors/SizeNS", pos = UDim2.new(0.5, 0, 1, 0), size = UDim2.new(1, -24, 0, 8), anchor = Vector2.new(0.5, 1)},
+            {name = "Left", cursor = "rbxasset://SystemCursors/SizeEW", pos = UDim2.new(0, 0, 0.5, 0), size = UDim2.new(0, 8, 1, -24), anchor = Vector2.new(0, 0.5)},
+            {name = "Right", cursor = "rbxasset://SystemCursors/SizeEW", pos = UDim2.new(1, 0, 0.5, 0), size = UDim2.new(0, 8, 1, -24), anchor = Vector2.new(1, 0.5)}
         }
         
-        for idx, zone in ipairs(resizeZones) do
+        local resizing = false
+        local startMousePos, startSize, startPos
+        
+        for _, direction in ipairs(resizeDirections) do
             local handle = s(
                 "TextButton",
                 {
-                    Size = zone.size,
-                    Position = zone.pos,
-                    AnchorPoint = zone.anchor,
-                    BackgroundTransparency = 1, -- โปร่งใสทั้งหมด
+                    Size = direction.size,
+                    Position = direction.pos,
+                    AnchorPoint = direction.anchor,
+                    BackgroundTransparency = 1,
                     Text = "",
                     Parent = v.Root,
                     ZIndex = 10000,
@@ -1981,91 +1979,94 @@ end,
                 }
             )
             
-            local resizing = false
-            local startMousePos, startSize, startPos
-            
-            -- เปลี่ยน Cursor เมื่อ Hover
+            -- Mouse cursor change on hover
             m.AddSignal(handle.MouseEnter, function()
-                i.Icon = zone.cursor
+                if not resizing and not v.Maximized then
+                    h.MouseIcon = direction.cursor
+                    currentResizeDirection = direction.name
+                end
             end)
+            
             m.AddSignal(handle.MouseLeave, function()
                 if not resizing then
-                    i.Icon = ""
+                    h.MouseIcon = ""
+                    currentResizeDirection = nil
                 end
             end)
             
             m.AddSignal(handle.MouseButton1Down, function()
+                if v.Maximized then return end
                 resizing = true
                 startMousePos = Vector2.new(i.X, i.Y)
                 startSize = Vector2.new(v.Size.X.Offset, v.Size.Y.Offset)
                 startPos = Vector2.new(v.Position.X.Offset, v.Position.Y.Offset)
-            end)
-            
-            m.AddSignal(h.InputEnded, function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    if resizing then
-                        resizing = false
-                        i.Icon = ""
-                    end
-                end
-            end)
-            
-            m.AddSignal(h.InputChanged, function(input)
-                if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    local delta = Vector2.new(i.X, i.Y) - startMousePos
-                    local newWidth, newHeight = startSize.X, startSize.Y
-                    local newX, newY = startPos.X, startPos.Y
-                    
-                    -- คำนวณขนาดใหม่ตามทิศทางที่ลาก
-                    if zone.dir == "BottomRight" then
-                        newWidth = startSize.X + delta.X
-                        newHeight = startSize.Y + delta.Y
-                    elseif zone.dir == "BottomLeft" then
-                        newWidth = startSize.X - delta.X
-                        newHeight = startSize.Y + delta.Y
-                        newX = startPos.X + delta.X
-                    elseif zone.dir == "TopRight" then
-                        newWidth = startSize.X + delta.X
-                        newHeight = startSize.Y - delta.Y
-                        newY = startPos.Y + delta.Y
-                    elseif zone.dir == "TopLeft" then
-                        newWidth = startSize.X - delta.X
-                        newHeight = startSize.Y - delta.Y
-                        newX = startPos.X + delta.X
-                        newY = startPos.Y + delta.Y
-                    elseif zone.dir == "Top" then
-                        newHeight = startSize.Y - delta.Y
-                        newY = startPos.Y + delta.Y
-                    elseif zone.dir == "Bottom" then
-                        newHeight = startSize.Y + delta.Y
-                    elseif zone.dir == "Left" then
-                        newWidth = startSize.X - delta.X
-                        newX = startPos.X + delta.X
-                    elseif zone.dir == "Right" then
-                        newWidth = startSize.X + delta.X
-                    end
-                    
-                    -- จำกัดขนาดขั้นต่ำ/สูงสุด
-                    newWidth = math.clamp(newWidth, 470, 2048)
-                    newHeight = math.clamp(newHeight, 380, 2048)
-                    
-                    -- ปรับตำแหน่งถ้าขนาดถูกจำกัด
-                    if zone.dir:find("Left") and (newWidth == 470 or newWidth == 2048) then
-                        newX = startPos.X + (startSize.X - newWidth)
-                    end
-                    if zone.dir:find("Top") and (newHeight == 380 or newHeight == 2048) then
-                        newY = startPos.Y + (startSize.Y - newHeight)
-                    end
-                    
-                    v.Root.Size = UDim2.fromOffset(newWidth, newHeight)
-                    v.Root.Position = UDim2.fromOffset(newX, newY)
-                    v.Size = UDim2.fromOffset(newWidth, newHeight)
-                    v.Position = UDim2.fromOffset(newX, newY)
-                end
+                h.MouseIcon = direction.cursor
             end)
             
             table.insert(resizeHandles, handle)
         end
+        
+        -- Global resize input handling
+        m.AddSignal(h.InputEnded, function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if resizing then
+                    resizing = false
+                    h.MouseIcon = ""
+                    v.Size = UDim2.fromOffset(v.Root.AbsoluteSize.X, v.Root.AbsoluteSize.Y)
+                end
+            end
+        end)
+        
+        m.AddSignal(h.InputChanged, function(input)
+            if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local delta = Vector2.new(i.X, i.Y) - startMousePos
+                local newWidth, newHeight = startSize.X, startSize.Y
+                local newX, newY = startPos.X, startPos.Y
+                
+                -- Calculate new size based on direction
+                if currentResizeDirection == "Right" or currentResizeDirection == "TopRight" or currentResizeDirection == "BottomRight" then
+                    newWidth = startSize.X + delta.X
+                end
+                if currentResizeDirection == "Left" or currentResizeDirection == "TopLeft" or currentResizeDirection == "BottomLeft" then
+                    newWidth = startSize.X - delta.X
+                    newX = startPos.X + delta.X
+                end
+                if currentResizeDirection == "Bottom" or currentResizeDirection == "BottomLeft" or currentResizeDirection == "BottomRight" then
+                    newHeight = startSize.Y + delta.Y
+                end
+                if currentResizeDirection == "Top" or currentResizeDirection == "TopLeft" or currentResizeDirection == "TopRight" then
+                    newHeight = startSize.Y - delta.Y
+                    newY = startPos.Y + delta.Y
+                end
+                
+                -- Clamp size
+                local clampedWidth = math.clamp(newWidth, 470, 2048)
+                local clampedHeight = math.clamp(newHeight, 380, 2048)
+                
+                -- Adjust position if size was clamped
+                if newWidth ~= clampedWidth then
+                    if currentResizeDirection:find("Left") then
+                        newX = startPos.X + (startSize.X - clampedWidth)
+                    end
+                end
+                if newHeight ~= clampedHeight then
+                    if currentResizeDirection:find("Top") then
+                        newY = startPos.Y + (startSize.Y - clampedHeight)
+                    end
+                end
+                
+                -- Apply smooth resize
+                G:setGoal {
+                    X = r(clampedWidth),
+                    Y = r(clampedHeight)
+                }
+                H:setGoal {
+                    X = r(newX),
+                    Y = r(newY)
+                }
+                v.Position = UDim2.fromOffset(newX, newY)
+            end
+        end)
         
         -- ========== Motors ==========
         local G, H =
@@ -2076,16 +2077,22 @@ end,
         v.ContainerBackMotor = l.SingleMotor.new(0)
         v.ContainerPosMotor = l.SingleMotor.new(94)
         
-        -- ========== Minimize Motors (ปรับปรุงใหม่) ==========
+        -- Enhanced Minimize Animation Motors
         local minimizeScaleMotor = l.SingleMotor.new(1)
         local minimizeOpacityMotor = l.SingleMotor.new(0)
-        local minimizeBlurMotor = l.SingleMotor.new(0)
-        local minimizePosYMotor = l.SingleMotor.new(0)
+        local minimizeRotationMotor = l.SingleMotor.new(0)
         
         minimizeScaleMotor:onStep(function(scale)
+            local centerX = v.Position.X.Offset + (v.Size.X.Offset / 2)
+            local centerY = v.Position.Y.Offset + (v.Size.Y.Offset / 2)
+            
             v.Root.Size = UDim2.fromOffset(
                 v.Size.X.Offset * scale,
                 v.Size.Y.Offset * scale
+            )
+            v.Root.Position = UDim2.fromOffset(
+                centerX - (v.Size.X.Offset * scale / 2),
+                centerY - (v.Size.Y.Offset * scale / 2)
             )
         end)
         
@@ -2093,10 +2100,8 @@ end,
             v.Root.GroupTransparency = opacity
         end)
         
-        minimizePosYMotor:onStep(function(offsetY)
-            local centerX = j.ViewportSize.X / 2 - (v.Size.X.Offset * minimizeScaleMotor:getValue()) / 2
-            local centerY = j.ViewportSize.Y / 2 - (v.Size.Y.Offset * minimizeScaleMotor:getValue()) / 2
-            v.Root.Position = UDim2.fromOffset(centerX, centerY + offsetY)
+        minimizeRotationMotor:onStep(function(rotation)
+            v.Root.Rotation = rotation
         end)
         
         G:onStep(
@@ -2160,13 +2165,12 @@ end,
                 }
             end
             
-            -- ซ่อน/แสดง Resize Handles
+            -- Show/Hide Resize Handles
             for _, handle in ipairs(resizeHandles) do
                 handle.Visible = not M
             end
         end
         
-        -- ลบการรองรับ Touch ออก - รองรับเฉพาะเมาส์
         m.AddSignal(
             v.TitleBar.Frame.InputBegan,
             function(M)
@@ -2219,12 +2223,6 @@ end,
                         v.Maximize(false, true, true)
                     end
                 end
-                if M.UserInputType == Enum.UserInputType.MouseMovement and A then
-                    local N, O = M.Position - B, v.Size
-                    local P = Vector3.new(O.X.Offset, O.Y.Offset, 0) + Vector3.new(1, 1, 0) * N
-                    local Q = Vector2.new(math.clamp(P.X, 470, 2048), math.clamp(P.Y, 380, 2048))
-                    G:setGoal {X = l.Instant.new(Q.X), Y = l.Instant.new(Q.Y)}
-                end
             end
         )
         m.AddSignal(
@@ -2258,29 +2256,27 @@ end,
             end
         )
         
-        -- ========== Animated Minimize Function (ปรับปรุงใหม่) ==========
+        -- ========== Enhanced Animated Minimize Function ==========
         function v.Minimize(M)
             v.Minimized = not v.Minimized
             
             if v.Minimized then
-                -- Minimize Animation - สมูทและสวยงามขึ้น
-                local springConfig = {frequency = 4.5, dampingRatio = 0.8}
-                minimizeScaleMotor:setGoal(q(0.85, springConfig))
-                minimizeOpacityMotor:setGoal(q(1, springConfig))
-                minimizePosYMotor:setGoal(q(30, springConfig))
-                
-                task.wait(0.35)
+                -- Smooth Minimize Animation (fade out with scale and slight rotation)
+                minimizeScaleMotor:setGoal(q(0.85, {frequency = 10, dampingRatio = 0.8}))
+                minimizeOpacityMotor:setGoal(q(1, {frequency = 8, dampingRatio = 1}))
+                minimizeRotationMotor:setGoal(q(2, {frequency = 10, dampingRatio = 0.9}))
+                task.wait(0.3)
                 v.Root.Visible = false
+                v.Root.Rotation = 0
             else
-                -- Restore Animation - ใช้ Spring ที่นุ่มนวลขึ้น
+                -- Smooth Restore Animation (pop in with overshoot)
                 v.Root.Visible = true
-                local springConfig = {frequency = 5, dampingRatio = 0.75}
-                minimizeScaleMotor:setGoal(q(1, springConfig))
-                minimizeOpacityMotor:setGoal(q(0, springConfig))
-                minimizePosYMotor:setGoal(q(0, springConfig))
+                minimizeScaleMotor:setGoal(q(1, {frequency = 12, dampingRatio = 0.7}))
+                minimizeOpacityMotor:setGoal(q(0, {frequency = 10, dampingRatio = 0.8}))
+                minimizeRotationMotor:setGoal(q(0, {frequency = 12, dampingRatio = 0.7}))
                 
-                task.wait(0.1)
-                -- Reset ตำแหน่งกลับไปที่เดิม
+                -- Reset position to center after animation
+                task.wait(0.35)
                 v.Root.Position = v.Position
             end
             
