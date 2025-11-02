@@ -1096,158 +1096,56 @@ local aa = {
         return o
     end,
     [13] = function()
-    local c, d, e, f, g = b(13)
-    local h = d.Parent.Parent
-    local i, j = e(h.Creator), e(h.Packages.Flipper)
-    local k, l = i.New, j.Spring.new
-    
-    return function(m, n)
-        local o = {}
-        o.Collapsed = false
-        
-        o.Layout = k("UIListLayout", {Padding = UDim.new(0, 5)})
-        
-        -- Container สำหรับเนื้อหา (จะถูกซ่อนเมื่อพับ)
-        o.Container = k(
-            "Frame",
-            {
-                Size = UDim2.new(1, 0, 0, 0),
-                Position = UDim2.fromOffset(0, 30),
-                BackgroundTransparency = 1,
-                ClipsDescendants = true
-            },
-            {o.Layout}
-        )
-        
-        -- ไอคอนลูกศร
-        local arrowIcon = k(
-            "TextLabel",
-            {
-                Size = UDim2.fromOffset(16, 16),
-                Position = UDim2.fromOffset(2, 5),
-                BackgroundTransparency = 1,
-                Text = "▼",
-                TextColor3 = Color3.fromRGB(240, 240, 240),
-                TextSize = 12,
-                Font = Enum.Font.GothamBold,
-                ThemeTag = {TextColor3 = "Text"}
-            }
-        )
-        
-        -- ชื่อ Section
-        local titleLabel = k(
-            "TextLabel",
-            {
-                RichText = true,
-                Text = m,
-                TextTransparency = 0,
-                FontFace = Font.new(
-                    "rbxassetid://12187365364",
-                    Enum.FontWeight.SemiBold,
-                    Enum.FontStyle.Normal
-                ),
-                TextSize = 18,
-                TextXAlignment = "Left",
-                TextYAlignment = "Center",
-                Size = UDim2.new(1, -25, 0, 18),
-                Position = UDim2.fromOffset(22, 4),
-                ThemeTag = {TextColor3 = "Text"}
-            }
-        )
-        
-        -- Header ที่คลิกได้
-        local header = k(
-            "TextButton",
-            {
-                Size = UDim2.new(1, 0, 0, 28),
-                BackgroundTransparency = 0.95,
-                Text = "",
-                ThemeTag = {BackgroundColor3 = "Element"}
-            },
-            {
-                k("UICorner", {CornerRadius = UDim.new(0, 4)}),
-                arrowIcon,
-                titleLabel
-            }
-        )
-        
-        o.Root = k(
-            "Frame",
-            {
-                BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 28),
-                LayoutOrder = 7,
-                Parent = n
-            },
-            {header, o.Container}
-        )
-        
-        -- Motor สำหรับอนิเมชั่น
-        local containerSizeMotor = j.SingleMotor.new(0)
-        local arrowRotationMotor = j.SingleMotor.new(0)
-        
-        containerSizeMotor:onStep(function(value)
-            o.Container.Size = UDim2.new(1, 0, 0, value)
-        end)
-        
-        arrowRotationMotor:onStep(function(value)
-            arrowIcon.Rotation = value
-        end)
-        
-        -- ฟังก์ชันพับ/เปิด
-        function o.Toggle()
-            o.Collapsed = not o.Collapsed
-            
-            if o.Collapsed then
-                -- พับ
-                containerSizeMotor:setGoal(l(0, {frequency = 6}))
-                arrowRotationMotor:setGoal(l(-90, {frequency = 8}))
-                task.wait(0.2)
-                o.Root.Size = UDim2.new(1, 0, 0, 28)
-            else
-                -- เปิด
-                local targetHeight = o.Layout.AbsoluteContentSize.Y + 5
-                containerSizeMotor:setGoal(l(targetHeight, {frequency = 6}))
-                arrowRotationMotor:setGoal(l(0, {frequency = 8}))
-                task.wait(0.05)
-                o.Root.Size = UDim2.new(1, 0, 0, 33 + targetHeight)
-            end
+        local c, d, e, f, g = b(13)
+        local h = d.Parent.Parent
+        local i = e(h.Creator)
+        local j = i.New
+        return function(k, l)
+            local m = {}
+            m.Layout = j("UIListLayout", {Padding = UDim.new(0, 5)})
+            m.Container =
+                j(
+                "Frame",
+                {Size = UDim2.new(1, 0, 0, 26), Position = UDim2.fromOffset(0, 24), BackgroundTransparency = 1},
+                {m.Layout}
+            )
+            m.Root =
+                j(
+                "Frame",
+                {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 26), LayoutOrder = 7, Parent = l},
+                {
+                    j(
+                        "TextLabel",
+                        {
+                            RichText = true,
+                            Text = k,
+                            TextTransparency = 0,
+                            FontFace = Font.new(
+                                "rbxassetid://12187365364",
+                                Enum.FontWeight.SemiBold,
+                                Enum.FontStyle.Normal
+                            ),
+                            TextSize = 18,
+                            TextXAlignment = "Left",
+                            TextYAlignment = "Center",
+                            Size = UDim2.new(1, -16, 0, 18),
+                            Position = UDim2.fromOffset(0, 2),
+                            ThemeTag = {TextColor3 = "Text"}
+                        }
+                    ),
+                    m.Container
+                }
+            )
+            i.AddSignal(
+                m.Layout:GetPropertyChangedSignal "AbsoluteContentSize",
+                function()
+                    m.Container.Size = UDim2.new(1, 0, 0, m.Layout.AbsoluteContentSize.Y)
+                    m.Root.Size = UDim2.new(1, 0, 0, m.Layout.AbsoluteContentSize.Y + 25)
+                end
+            )
+            return m
         end
-        
-        -- คลิกเพื่อพับ/เปิด
-        i.AddSignal(header.MouseButton1Click, function()
-            o.Toggle()
-        end)
-        
-        -- Hover effect
-        local hoverMotor, setHover = i.SpringMotor(0.95, header, "BackgroundTransparency")
-        i.AddSignal(header.MouseEnter, function()
-            setHover(0.92)
-        end)
-        i.AddSignal(header.MouseLeave, function()
-            setHover(0.95)
-        end)
-        
-        -- อัปเดตขนาดเมื่อเนื้อหาเปลี่ยน
-        i.AddSignal(o.Layout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-            if not o.Collapsed then
-                local targetHeight = o.Layout.AbsoluteContentSize.Y + 5
-                o.Container.Size = UDim2.new(1, 0, 0, targetHeight)
-                o.Root.Size = UDim2.new(1, 0, 0, 33 + targetHeight)
-            end
-        end)
-        
-        -- เริ่มต้นแบบเปิด
-        task.defer(function()
-            task.wait(0.1)
-            local initialHeight = o.Layout.AbsoluteContentSize.Y + 5
-            o.Container.Size = UDim2.new(1, 0, 0, initialHeight)
-            o.Root.Size = UDim2.new(1, 0, 0, 33 + initialHeight)
-        end)
-        
-        return o
-    end
-end,
+    end,
     [14] = function()
     local c, d, e, f, g = b(14)
     local h = d.Parent.Parent
