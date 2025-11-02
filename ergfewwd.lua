@@ -1155,7 +1155,7 @@ local aa = {
             i.Spring.new,
             i.Instant.new,
             h.Components,
-            {Window = nil, Tabs = {}, Containers = {}, SelectedTab = 0, TabCount = 0, CollapsedTabs = {}}
+            {Window = nil, Tabs = {}, Containers = {}, TabSections = {}, SelectedTab = 0, TabCount = 0}
         function o.Init(p, q)
             o.Window = q
             return o
@@ -1164,11 +1164,134 @@ local aa = {
             local q, r = o.Window.TabHolder.AbsolutePosition.Y, o.Tabs[o.SelectedTab].Frame.AbsolutePosition.Y
             return r - q
         end
-        function o.New(p, q, r, s)
+        
+        -- ฟังก์ชันสร้าง Tab Section
+        function o.AddTabSection(p, q)
+            local sectionData = {
+                Name = q,
+                Collapsed = false,
+                Tabs = {},
+                Type = "TabSection"
+            }
+            
+            -- สร้าง Section Header
+            local sectionHeader = k(
+                "TextButton",
+                {
+                    Size = UDim2.new(1, 0, 0, 28),
+                    BackgroundColor3 = Color3.fromRGB(25, 25, 30),
+                    BackgroundTransparency = 0.5,
+                    Parent = o.Window.TabHolder,
+                    ThemeTag = {BackgroundColor3 = "TabSection"}
+                },
+                {
+                    k("UICorner", {CornerRadius = UDim.new(0, 6)}),
+                    k(
+                        "TextLabel",
+                        {
+                            AnchorPoint = Vector2.new(0, 0.5),
+                            Position = UDim2.new(0, 24, 0.5, 0),
+                            Text = q,
+                            RichText = true,
+                            TextColor3 = Color3.fromRGB(180, 180, 180),
+                            FontFace = Font.new(
+                                "rbxasset://fonts/families/GothamSSm.json",
+                                Enum.FontWeight.Medium,
+                                Enum.FontStyle.Normal
+                            ),
+                            TextSize = 11,
+                            TextXAlignment = "Left",
+                            Size = UDim2.new(1, -30, 1, 0),
+                            BackgroundTransparency = 1,
+                            ThemeTag = {TextColor3 = "SubText"}
+                        }
+                    ),
+                    k(
+                        "TextLabel",
+                        {
+                            Name = "Arrow",
+                            AnchorPoint = Vector2.new(0, 0.5),
+                            Position = UDim2.new(0, 8, 0.5, 0),
+                            Size = UDim2.fromOffset(10, 10),
+                            BackgroundTransparency = 1,
+                            Text = "▼",
+                            TextColor3 = Color3.fromRGB(180, 180, 180),
+                            TextSize = 10,
+                            ThemeTag = {TextColor3 = "SubText"}
+                        }
+                    )
+                }
+            )
+            
+            sectionData.Header = sectionHeader
+            sectionData.Arrow = sectionHeader:FindFirstChild("Arrow")
+            
+            -- สร้าง Container สำหรับ Tabs ภายใน Section
+            local tabContainer = k(
+                "Frame",
+                {
+                    Size = UDim2.new(1, 0, 0, 0),
+                    BackgroundTransparency = 1,
+                    Parent = o.Window.TabHolder,
+                    ClipsDescendants = true
+                },
+                {
+                    k("UIListLayout", {Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder})
+                }
+            )
+            
+            sectionData.Container = tabContainer
+            sectionData.Layout = tabContainer:FindFirstChildOfClass("UIListLayout")
+            
+            -- ฟังก์ชัน Toggle Section
+            function sectionData.Toggle()
+                sectionData.Collapsed = not sectionData.Collapsed
+                
+                if sectionData.Collapsed then
+                    sectionData.Arrow.Text = "▶"
+                    -- ซ่อน Tabs ทั้งหมดใน Section
+                    for _, tab in pairs(sectionData.Tabs) do
+                        tab.Frame.Visible = false
+                    end
+                    sectionData.Container.Size = UDim2.new(1, 0, 0, 0)
+                else
+                    sectionData.Arrow.Text = "▼"
+                    -- แสดง Tabs ทั้งหมดใน Section
+                    for _, tab in pairs(sectionData.Tabs) do
+                        tab.Frame.Visible = true
+                    end
+                    task.wait()
+                    local contentSize = sectionData.Layout.AbsoluteContentSize.Y
+                    sectionData.Container.Size = UDim2.new(1, 0, 0, contentSize + 6)
+                end
+            end
+            
+            j.AddSignal(
+                sectionHeader.MouseButton1Click,
+                function()
+                    sectionData.Toggle()
+                end
+            )
+            
+            -- อัพเดทขนาด Container เมื่อมีการเปลี่ยนแปลง
+            j.AddSignal(
+                sectionData.Layout:GetPropertyChangedSignal("AbsoluteContentSize"),
+                function()
+                    if not sectionData.Collapsed then
+                        sectionData.Container.Size = UDim2.new(1, 0, 0, sectionData.Layout.AbsoluteContentSize.Y + 6)
+                    end
+                end
+            )
+            
+            table.insert(o.TabSections, sectionData)
+            return sectionData
+        end
+        
+        function o.New(p, q, r, s, tabSection)
             local t, u = e(h), o.Window
             local v = t.Elements
             o.TabCount = o.TabCount + 1
-            local w, x = o.TabCount, {Selected = false, Name = q, Type = "Tab", Collapsed = false}
+            local w, x = o.TabCount, {Selected = false, Name = q, Type = "Tab"}
             if t:GetIcon(r) then
                 r = t:GetIcon(r)
             end
@@ -1176,20 +1299,8 @@ local aa = {
                 r = nil
             end
             
-            -- สร้างไอคอนลูกศรสำหรับพับเปิด Tab
-            local arrowIcon = k(
-                "TextLabel",
-                {
-                    AnchorPoint = Vector2.new(1, 0.5),
-                    Position = UDim2.new(1, -8, 0.5, 0),
-                    Size = UDim2.fromOffset(10, 10),
-                    BackgroundTransparency = 1,
-                    Text = "▼",
-                    TextColor3 = Color3.fromRGB(200, 200, 200),
-                    TextSize = 9,
-                    ThemeTag = {TextColor3 = "SubText"}
-                }
-            )
+            -- ถ้ามี tabSection ให้ใช้ Container ของ Section แทน
+            local parentContainer = (tabSection and tabSection.Container) or s
             
             x.Frame =
                 k(
@@ -1197,7 +1308,7 @@ local aa = {
                 {
                     Size = UDim2.new(1, 0, 0, 34),
                     BackgroundTransparency = 1,
-                    Parent = s,
+                    Parent = parentContainer,
                     ThemeTag = {BackgroundColor3 = "Tab"}
                 },
                 {
@@ -1205,7 +1316,6 @@ local aa = {
                     k(
                         "TextLabel",
                         {
-                            Name = "TabTitle",
                             AnchorPoint = Vector2.new(0, 0.5),
                             Position = r and UDim2.new(0, 30, 0.5, 0) or UDim2.new(0, 12, 0.5, 0),
                             Text = q,
@@ -1220,7 +1330,7 @@ local aa = {
                             TextSize = 12,
                             TextXAlignment = "Left",
                             TextYAlignment = "Center",
-                            Size = UDim2.new(1, -30, 1, 0),
+                            Size = UDim2.new(1, -12, 1, 0),
                             BackgroundTransparency = 1,
                             ThemeTag = {TextColor3 = "Text"}
                         }
@@ -1235,12 +1345,15 @@ local aa = {
                             Image = r and r or nil,
                             ThemeTag = {ImageColor3 = "Text"}
                         }
-                    ),
-                    arrowIcon
+                    )
                 }
             )
             
-            x.Arrow = arrowIcon
+            -- เพิ่ม Tab เข้า Section ถ้ามี
+            if tabSection then
+                table.insert(tabSection.Tabs, x)
+                x.Section = tabSection
+            end
             
             local y = k("UIListLayout", {Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder})
             x.ContainerFrame =
@@ -1281,28 +1394,6 @@ local aa = {
                 end
             )
             x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, "BackgroundTransparency")
-            
-            -- ฟังก์ชัน Toggle Tab
-            function x.ToggleCollapse()
-                x.Collapsed = not x.Collapsed
-                
-                if x.Collapsed then
-                    x.Arrow.Text = "▶"
-                    x.Frame.Size = UDim2.new(1, 0, 0, 34)
-                    -- ซ่อน content ถ้า Tab นี้กำลังถูกเลือกอยู่
-                    if o.SelectedTab == w then
-                        x.ContainerFrame.Visible = false
-                    end
-                else
-                    x.Arrow.Text = "▼"
-                    x.Frame.Size = UDim2.new(1, 0, 0, 34)
-                    -- แสดง content ถ้า Tab นี้กำลังถูกเลือกอยู่
-                    if o.SelectedTab == w then
-                        x.ContainerFrame.Visible = true
-                    end
-                end
-            end
-            
             j.AddSignal(
                 x.Frame.MouseEnter,
                 function()
@@ -1330,19 +1421,9 @@ local aa = {
             j.AddSignal(
                 x.Frame.MouseButton1Click,
                 function()
-                    -- คลิกซ้าย = เลือก Tab
                     o:SelectTab(w)
                 end
             )
-            
-            -- คลิกขวา = พับเปิด Tab
-            j.AddSignal(
-                x.Frame.MouseButton2Click,
-                function()
-                    x.ToggleCollapse()
-                end
-            )
-            
             o.Containers[w] = x.ContainerFrame
             o.Tabs[w] = x
             x.Container = x.ContainerFrame
@@ -1359,13 +1440,6 @@ local aa = {
         end
         function o.SelectTab(p, q)
             local r = o.Window
-            local selectedTab = o.Tabs[q]
-            
-            -- ถ้า Tab ที่เลือกถูกพับอยู่ ให้เปิดออกก่อน
-            if selectedTab.Collapsed then
-                selectedTab.ToggleCollapse()
-            end
-            
             o.SelectedTab = q
             for s, t in next, o.Tabs do
                 t.SetTransparency(1)
@@ -1383,10 +1457,7 @@ local aa = {
                     for u, v in next, o.Containers do
                         v.Visible = false
                     end
-                    -- แสดง content เฉพาะถ้า Tab ไม่ได้ถูกพับ
-                    if not o.Tabs[q].Collapsed then
-                        o.Containers[q].Visible = true
-                    end
+                    o.Containers[q].Visible = true
                     r.ContainerPosMotor:setGoal(l(94, {frequency = 5}))
                     r.ContainerBackMotor:setGoal(l(0, {frequency = 8}))
                 end
