@@ -1942,34 +1942,57 @@ end,
             v.AcrylicPaint.AddParent(v.Root)
         end
         
-        -- ========== Resize Handles (4 มุม) ==========
+        -- ========== ระบบ Resize ใหม่ (4 ขอบ + 4 มุม) ==========
         local resizeHandles = {}
-        local corners = {
-            {pos = UDim2.new(0, -6, 0, -6), anchor = Vector2.new(0, 0), name = "TopLeft"},
-            {pos = UDim2.new(1, 6, 0, -6), anchor = Vector2.new(1, 0), name = "TopRight"},
-            {pos = UDim2.new(0, -6, 1, 6), anchor = Vector2.new(0, 1), name = "BottomLeft"},
-            {pos = UDim2.new(1, 6, 1, 6), anchor = Vector2.new(1, 1), name = "BottomRight"}
+        local resizeZones = {
+            -- 4 มุม
+            {pos = UDim2.new(0, -8, 0, -8), size = UDim2.fromOffset(16, 16), anchor = Vector2.new(0, 0), 
+             cursor = "rbxasset://SystemCursors/SizeNWSE", type = "corner", dir = "TopLeft"},
+            {pos = UDim2.new(1, -8, 0, -8), size = UDim2.fromOffset(16, 16), anchor = Vector2.new(1, 0), 
+             cursor = "rbxasset://SystemCursors/SizeNESW", type = "corner", dir = "TopRight"},
+            {pos = UDim2.new(0, -8, 1, -8), size = UDim2.fromOffset(16, 16), anchor = Vector2.new(0, 1), 
+             cursor = "rbxasset://SystemCursors/SizeNESW", type = "corner", dir = "BottomLeft"},
+            {pos = UDim2.new(1, -8, 1, -8), size = UDim2.fromOffset(16, 16), anchor = Vector2.new(1, 1), 
+             cursor = "rbxasset://SystemCursors/SizeNWSE", type = "corner", dir = "BottomRight"},
+            
+            -- 4 ขอบ
+            {pos = UDim2.new(0, 0, 0, -4), size = UDim2.new(1, 0, 0, 8), anchor = Vector2.new(0, 0), 
+             cursor = "rbxasset://SystemCursors/SizeNS", type = "edge", dir = "Top"},
+            {pos = UDim2.new(0, 0, 1, -4), size = UDim2.new(1, 0, 0, 8), anchor = Vector2.new(0, 1), 
+             cursor = "rbxasset://SystemCursors/SizeNS", type = "edge", dir = "Bottom"},
+            {pos = UDim2.new(0, -4, 0, 0), size = UDim2.new(0, 8, 1, 0), anchor = Vector2.new(0, 0), 
+             cursor = "rbxasset://SystemCursors/SizeEW", type = "edge", dir = "Left"},
+            {pos = UDim2.new(1, -4, 0, 0), size = UDim2.new(0, 8, 1, 0), anchor = Vector2.new(1, 0), 
+             cursor = "rbxasset://SystemCursors/SizeEW", type = "edge", dir = "Right"}
         }
         
-        for idx, corner in ipairs(corners) do
+        for idx, zone in ipairs(resizeZones) do
             local handle = s(
                 "TextButton",
                 {
-                    Size = UDim2.fromOffset(12, 12),
-                    Position = corner.pos,
-                    AnchorPoint = corner.anchor,
-                    BackgroundTransparency = 0.3,
-                    BackgroundColor3 = Color3.fromRGB(76, 194, 255),
+                    Size = zone.size,
+                    Position = zone.pos,
+                    AnchorPoint = zone.anchor,
+                    BackgroundTransparency = 1, -- โปร่งใสทั้งหมด
                     Text = "",
                     Parent = v.Root,
                     ZIndex = 10000,
-                    ThemeTag = {BackgroundColor3 = "Accent"}
-                },
-                {s("UICorner", {CornerRadius = UDim.new(1, 0)})}
+                    AutoButtonColor = false
+                }
             )
             
             local resizing = false
             local startMousePos, startSize, startPos
+            
+            -- เปลี่ยน Cursor เมื่อ Hover
+            m.AddSignal(handle.MouseEnter, function()
+                i.Icon = zone.cursor
+            end)
+            m.AddSignal(handle.MouseLeave, function()
+                if not resizing then
+                    i.Icon = ""
+                end
+            end)
             
             m.AddSignal(handle.MouseButton1Down, function()
                 resizing = true
@@ -1980,7 +2003,10 @@ end,
             
             m.AddSignal(h.InputEnded, function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    resizing = false
+                    if resizing then
+                        resizing = false
+                        i.Icon = ""
+                    end
                 end
             end)
             
@@ -1990,23 +2016,33 @@ end,
                     local newWidth, newHeight = startSize.X, startSize.Y
                     local newX, newY = startPos.X, startPos.Y
                     
-                    -- คำนวณขนาดใหม่ตามมุมที่ลาก
-                    if corner.name == "BottomRight" then
+                    -- คำนวณขนาดใหม่ตามทิศทางที่ลาก
+                    if zone.dir == "BottomRight" then
                         newWidth = startSize.X + delta.X
                         newHeight = startSize.Y + delta.Y
-                    elseif corner.name == "BottomLeft" then
+                    elseif zone.dir == "BottomLeft" then
                         newWidth = startSize.X - delta.X
                         newHeight = startSize.Y + delta.Y
                         newX = startPos.X + delta.X
-                    elseif corner.name == "TopRight" then
+                    elseif zone.dir == "TopRight" then
                         newWidth = startSize.X + delta.X
                         newHeight = startSize.Y - delta.Y
                         newY = startPos.Y + delta.Y
-                    elseif corner.name == "TopLeft" then
+                    elseif zone.dir == "TopLeft" then
                         newWidth = startSize.X - delta.X
                         newHeight = startSize.Y - delta.Y
                         newX = startPos.X + delta.X
                         newY = startPos.Y + delta.Y
+                    elseif zone.dir == "Top" then
+                        newHeight = startSize.Y - delta.Y
+                        newY = startPos.Y + delta.Y
+                    elseif zone.dir == "Bottom" then
+                        newHeight = startSize.Y + delta.Y
+                    elseif zone.dir == "Left" then
+                        newWidth = startSize.X - delta.X
+                        newX = startPos.X + delta.X
+                    elseif zone.dir == "Right" then
+                        newWidth = startSize.X + delta.X
                     end
                     
                     -- จำกัดขนาดขั้นต่ำ/สูงสุด
@@ -2014,15 +2050,11 @@ end,
                     newHeight = math.clamp(newHeight, 380, 2048)
                     
                     -- ปรับตำแหน่งถ้าขนาดถูกจำกัด
-                    if newWidth == 470 or newWidth == 2048 then
-                        if corner.name:find("Left") then
-                            newX = startPos.X + (startSize.X - newWidth)
-                        end
+                    if zone.dir:find("Left") and (newWidth == 470 or newWidth == 2048) then
+                        newX = startPos.X + (startSize.X - newWidth)
                     end
-                    if newHeight == 380 or newHeight == 2048 then
-                        if corner.name:find("Top") then
-                            newY = startPos.Y + (startSize.Y - newHeight)
-                        end
+                    if zone.dir:find("Top") and (newHeight == 380 or newHeight == 2048) then
+                        newY = startPos.Y + (startSize.Y - newHeight)
                     end
                     
                     v.Root.Size = UDim2.fromOffset(newWidth, newHeight)
@@ -2030,15 +2062,6 @@ end,
                     v.Size = UDim2.fromOffset(newWidth, newHeight)
                     v.Position = UDim2.fromOffset(newX, newY)
                 end
-            end)
-            
-            -- Hover effect
-            local hoverMotor, setHover = m.SpringMotor(0.3, handle, "BackgroundTransparency")
-            m.AddSignal(handle.MouseEnter, function()
-                setHover(0)
-            end)
-            m.AddSignal(handle.MouseLeave, function()
-                setHover(0.3)
             end)
             
             table.insert(resizeHandles, handle)
@@ -2053,9 +2076,11 @@ end,
         v.ContainerBackMotor = l.SingleMotor.new(0)
         v.ContainerPosMotor = l.SingleMotor.new(94)
         
-        -- Minimize Animation Motor
+        -- ========== Minimize Motors (ปรับปรุงใหม่) ==========
         local minimizeScaleMotor = l.SingleMotor.new(1)
         local minimizeOpacityMotor = l.SingleMotor.new(0)
+        local minimizeBlurMotor = l.SingleMotor.new(0)
+        local minimizePosYMotor = l.SingleMotor.new(0)
         
         minimizeScaleMotor:onStep(function(scale)
             v.Root.Size = UDim2.fromOffset(
@@ -2066,6 +2091,12 @@ end,
         
         minimizeOpacityMotor:onStep(function(opacity)
             v.Root.GroupTransparency = opacity
+        end)
+        
+        minimizePosYMotor:onStep(function(offsetY)
+            local centerX = j.ViewportSize.X / 2 - (v.Size.X.Offset * minimizeScaleMotor:getValue()) / 2
+            local centerY = j.ViewportSize.Y / 2 - (v.Size.Y.Offset * minimizeScaleMotor:getValue()) / 2
+            v.Root.Position = UDim2.fromOffset(centerX, centerY + offsetY)
         end)
         
         G:onStep(
@@ -2135,10 +2166,11 @@ end,
             end
         end
         
+        -- ลบการรองรับ Touch ออก - รองรับเฉพาะเมาส์
         m.AddSignal(
             v.TitleBar.Frame.InputBegan,
             function(M)
-                if M.UserInputType == Enum.UserInputType.MouseButton1 or M.UserInputType == Enum.UserInputType.Touch then
+                if M.UserInputType == Enum.UserInputType.MouseButton1 then
                     w = true
                     y = M.Position
                     z = v.Root.Position
@@ -2162,10 +2194,7 @@ end,
         m.AddSignal(
             v.TitleBar.Frame.InputChanged,
             function(M)
-                if
-                    M.UserInputType == Enum.UserInputType.MouseMovement or
-                        M.UserInputType == Enum.UserInputType.Touch
-                 then
+                if M.UserInputType == Enum.UserInputType.MouseMovement then
                     x = M
                 end
             end
@@ -2173,7 +2202,7 @@ end,
         m.AddSignal(
             E.InputBegan,
             function(M)
-                if M.UserInputType == Enum.UserInputType.MouseButton1 or M.UserInputType == Enum.UserInputType.Touch then
+                if M.UserInputType == Enum.UserInputType.MouseButton1 then
                     A = true
                     B = M.Position
                 end
@@ -2190,11 +2219,7 @@ end,
                         v.Maximize(false, true, true)
                     end
                 end
-                if
-                    (M.UserInputType == Enum.UserInputType.MouseMovement or
-                        M.UserInputType == Enum.UserInputType.Touch) and
-                        A
-                 then
+                if M.UserInputType == Enum.UserInputType.MouseMovement and A then
                     local N, O = M.Position - B, v.Size
                     local P = Vector3.new(O.X.Offset, O.Y.Offset, 0) + Vector3.new(1, 1, 0) * N
                     local Q = Vector2.new(math.clamp(P.X, 470, 2048), math.clamp(P.Y, 380, 2048))
@@ -2205,7 +2230,7 @@ end,
         m.AddSignal(
             h.InputEnded,
             function(M)
-                if A == true or M.UserInputType == Enum.UserInputType.Touch then
+                if A == true then
                     A = false
                     v.Size = UDim2.fromOffset(G:getValue().X, G:getValue().Y)
                 end
@@ -2233,21 +2258,30 @@ end,
             end
         )
         
-        -- ========== Animated Minimize Function ==========
+        -- ========== Animated Minimize Function (ปรับปรุงใหม่) ==========
         function v.Minimize(M)
             v.Minimized = not v.Minimized
             
             if v.Minimized then
-                -- Minimize Animation
-                minimizeScaleMotor:setGoal(q(0.3, {frequency = 8}))
-                minimizeOpacityMotor:setGoal(q(1, {frequency = 8}))
-                task.wait(0.25)
+                -- Minimize Animation - สมูทและสวยงามขึ้น
+                local springConfig = {frequency = 4.5, dampingRatio = 0.8}
+                minimizeScaleMotor:setGoal(q(0.85, springConfig))
+                minimizeOpacityMotor:setGoal(q(1, springConfig))
+                minimizePosYMotor:setGoal(q(30, springConfig))
+                
+                task.wait(0.35)
                 v.Root.Visible = false
             else
-                -- Restore Animation
+                -- Restore Animation - ใช้ Spring ที่นุ่มนวลขึ้น
                 v.Root.Visible = true
-                minimizeScaleMotor:setGoal(q(1, {frequency = 8}))
-                minimizeOpacityMotor:setGoal(q(0, {frequency = 8}))
+                local springConfig = {frequency = 5, dampingRatio = 0.75}
+                minimizeScaleMotor:setGoal(q(1, springConfig))
+                minimizeOpacityMotor:setGoal(q(0, springConfig))
+                minimizePosYMotor:setGoal(q(0, springConfig))
+                
+                task.wait(0.1)
+                -- Reset ตำแหน่งกลับไปที่เดิม
+                v.Root.Position = v.Position
             end
             
             if not C then
