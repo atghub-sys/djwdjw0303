@@ -2835,7 +2835,7 @@ end,
             }
         )
         
-        -- Clear Button (X) - ปุ่มลบการเลือกทั้งหมด
+        -- Clear Button (X)
         local clearButton = e(
             "TextButton",
             {
@@ -2864,16 +2864,15 @@ end,
         
         -- Select All Button (เฉพาะ Multi-select)
         local selectAllButton = nil
-        local clearAllButton = nil
         
         if j.Multi then
             selectAllButton = e(
                 "TextButton",
                 {
-                    Size = UDim2.new(0.48, 0, 0, 28),
+                    Size = UDim2.new(1, -10, 0, 28),
                     Position = UDim2.fromOffset(5, 40),
                     BackgroundTransparency = 0.9,
-                    Text = "✓ All",
+                    Text = "✓ Select All",
                     TextColor3 = Color3.fromRGB(76, 194, 255),
                     TextSize = 13,
                     FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium),
@@ -2887,31 +2886,6 @@ end,
                             Transparency = 0.5,
                             ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                             ThemeTag = {Color = "Accent"}
-                        }
-                    )
-                }
-            )
-            
-            clearAllButton = e(
-                "TextButton",
-                {
-                    Size = UDim2.new(0.48, 0, 0, 28),
-                    Position = UDim2.new(0.52, 0, 0, 40),
-                    BackgroundTransparency = 0.9,
-                    Text = "✗ Clear",
-                    TextColor3 = Color3.fromRGB(255, 80, 80),
-                    TextSize = 13,
-                    FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium),
-                    ThemeTag = {BackgroundColor3 = "DialogButton"}
-                },
-                {
-                    e("UICorner", {CornerRadius = UDim.new(0, 5)}),
-                    e(
-                        "UIStroke",
-                        {
-                            Transparency = 0.5,
-                            Color = Color3.fromRGB(255, 80, 80),
-                            ApplyStrokeMode = Enum.ApplyStrokeMode.Border
                         }
                     )
                 }
@@ -2967,7 +2941,6 @@ end,
         
         if j.Multi then
             table.insert(uChildren, selectAllButton)
-            table.insert(uChildren, clearAllButton)
         end
         
         local u =
@@ -2990,16 +2963,36 @@ end,
         )
         table.insert(k.OpenFrames, v)
         
-        -- Position dropdown
+        -- Position dropdown with smart positioning
         local w = function()
             local mainFrame = p.AbsolutePosition
             local mainSize = p.AbsoluteSize
             local dropdownWidth = 170
-            local xPos = mainFrame.X + mainSize.X + 33
+            local viewportSize = ai.ViewportSize
+            
+            -- Try right side first
+            local xPos = mainFrame.X + mainSize.X + 10
+            
+            -- If goes off screen on right, try left side
+            if xPos + dropdownWidth > viewportSize.X then
+                xPos = mainFrame.X - dropdownWidth - 10
+            end
+            
+            -- If still off screen on left, clamp to screen
+            if xPos < 0 then
+                xPos = math.min(mainFrame.X + mainSize.X + 10, viewportSize.X - dropdownWidth - 10)
+                xPos = math.max(xPos, 10)
+            end
+            
             local yPos = mainFrame.Y - 5
             
-            if xPos + dropdownWidth > ai.ViewportSize.X then
-                xPos = mainFrame.X - dropdownWidth - 20
+            -- Make sure Y position is within screen
+            local maxY = viewportSize.Y - v.AbsoluteSize.Y - 10
+            if yPos > maxY then
+                yPos = maxY
+            end
+            if yPos < 10 then
+                yPos = 10
             end
             
             v.Position = UDim2.fromOffset(xPos, yPos)
@@ -3020,19 +3013,34 @@ end,
         w()
         y()
         c.AddSignal(p:GetPropertyChangedSignal "AbsolutePosition", w)
+        
+        -- Toggle dropdown on click
         c.AddSignal(
             p.MouseButton1Click,
             function()
-                l:Open()
+                if l.Opened then
+                    l:Close()
+                else
+                    l:Open()
+                end
             end
         )
+        
         c.AddSignal(
             ag.InputBegan,
             function(A)
                 if A.UserInputType == Enum.UserInputType.MouseButton1 or A.UserInputType == Enum.UserInputType.Touch then
-                    local B, C = u.AbsolutePosition, u.AbsoluteSize
-                    if ah.X < B.X or ah.X > B.X + C.X or ah.Y < B.Y or ah.Y > B.Y + C.Y then
-                        l:Close()
+                    if l.Opened then
+                        local B, C = u.AbsolutePosition, u.AbsoluteSize
+                        local pB, pC = p.AbsolutePosition, p.AbsoluteSize
+                        
+                        -- Check if click is outside dropdown and outside button
+                        local outsideDropdown = ah.X < B.X or ah.X > B.X + C.X or ah.Y < B.Y or ah.Y > B.Y + C.Y
+                        local outsideButton = ah.X < pB.X or ah.X > pB.X + pC.X or ah.Y < pB.Y or ah.Y > pB.Y + pC.Y
+                        
+                        if outsideDropdown and outsideButton then
+                            l:Close()
+                        end
                     end
                 end
             end
@@ -3089,22 +3097,9 @@ end,
             )
         end
         
-        -- Clear All button functionality
-        if j.Multi and clearAllButton then
-            c.AddSignal(
-                clearAllButton.MouseButton1Click,
-                function()
-                    l.Value = {}
-                    l:Display()
-                    l:BuildDropdownList()
-                    k:SafeCallback(l.Callback, l.Value)
-                    k:SafeCallback(l.Changed, l.Value)
-                end
-            )
-        end
-        
         local A = h.ScrollFrame
         function l.Open(B)
+            if l.Opened then return end
             l.Opened = true
             A.ScrollingEnabled = false
             v.Visible = true
@@ -3118,12 +3113,23 @@ end,
                 {Size = UDim2.fromScale(1, 1)}
             ):Play()
         end
+        
         function l.Close(B)
+            if not l.Opened then return end
             l.Opened = false
             A.ScrollingEnabled = true
-            u.Size = UDim2.fromScale(1, 0.5)
-            v.Visible = false
+            
+            local closeTween = af:Create(
+                u,
+                TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
+                {Size = UDim2.fromScale(1, 0.5)}
+            )
+            closeTween:Play()
+            closeTween.Completed:Connect(function()
+                v.Visible = false
+            end)
         end
+        
         function l.Display(B)
             local C, D = l.Values, ""
             local hasSelection = false
