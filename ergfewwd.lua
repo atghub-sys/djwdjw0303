@@ -2835,7 +2835,7 @@ end,
             }
         )
         
-        -- Clear Button (X)
+        -- Clear Button (X) - ปุ่มลบการเลือกทั้งหมด
         local clearButton = e(
             "TextButton",
             {
