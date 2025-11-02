@@ -1294,13 +1294,84 @@ local aa = {
             o.Tabs[w] = x
             x.Container = x.ContainerFrame
             x.ScrollFrame = x.Container
+            
+            -- ฟังก์ชัน AddSection ที่รองรับการพับเปิด
             function x.AddSection(z, A)
-                local B, C = {Type = "Section"}, e(n.Section)(A, x.Container)
+                local B, C = {Type = "Section", Collapsed = false}, e(n.Section)(A, x.Container)
                 B.Container = C.Container
                 B.ScrollFrame = x.Container
+                B.SectionFrame = C.Frame or C.Container.Parent
+                
+                -- เก็บ Layout สำหรับคำนวณขนาด
+                B.Layout = B.Container:FindFirstChildOfClass("UIListLayout")
+                
+                -- สร้างปุ่มสำหรับพับเปิด Section
+                if B.SectionFrame then
+                    local toggleBtn = k(
+                        "TextButton",
+                        {
+                            Size = UDim2.new(1, 0, 0, 25),
+                            BackgroundTransparency = 1,
+                            Parent = B.SectionFrame,
+                            Text = "",
+                            ZIndex = 10
+                        }
+                    )
+                    
+                    -- สร้างไอคอนลูกศร
+                    local arrow = k(
+                        "TextLabel",
+                        {
+                            AnchorPoint = Vector2.new(1, 0.5),
+                            Position = UDim2.new(1, -10, 0.5, 0),
+                            Size = UDim2.fromOffset(12, 12),
+                            BackgroundTransparency = 1,
+                            Text = "▼",
+                            TextColor3 = Color3.fromRGB(200, 200, 200),
+                            TextSize = 10,
+                            Parent = toggleBtn,
+                            ThemeTag = {TextColor3 = "SubText"}
+                        }
+                    )
+                    
+                    B.Arrow = arrow
+                    B.OriginalSize = B.Container.AbsoluteSize.Y
+                    
+                    -- ฟังก์ชัน Toggle
+                    function B.Toggle(self)
+                        self.Collapsed = not self.Collapsed
+                        
+                        if self.Collapsed then
+                            -- พับ Section
+                            self.Arrow.Text = "▶"
+                            self.Container.Visible = false
+                            if self.SectionFrame then
+                                self.SectionFrame.Size = UDim2.new(1, 0, 0, 30)
+                            end
+                        else
+                            -- เปิด Section
+                            self.Arrow.Text = "▼"
+                            self.Container.Visible = true
+                            if self.SectionFrame and self.Layout then
+                                task.wait()
+                                local contentSize = self.Layout.AbsoluteContentSize.Y
+                                self.SectionFrame.Size = UDim2.new(1, 0, 0, contentSize + 40)
+                            end
+                        end
+                    end
+                    
+                    j.AddSignal(
+                        toggleBtn.MouseButton1Click,
+                        function()
+                            B:Toggle()
+                        end
+                    )
+                end
+                
                 setmetatable(B, v)
                 return B
             end
+            
             setmetatable(x, v)
             return x
         end
