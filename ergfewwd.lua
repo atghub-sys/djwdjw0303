@@ -1147,324 +1147,213 @@ local aa = {
         end
     end,
     [14] = function()
-        local c, d, e, f, g = b(14)
-        local h = d.Parent.Parent
-        local i, j = e(h.Packages.Flipper), e(h.Creator)
-        local k, l, m, n, o =
-            j.New,
-            i.Spring.new,
-            i.Instant.new,
-            h.Components,
-            {Window = nil, Tabs = {}, Containers = {}, TabSections = {}, SelectedTab = 0, TabCount = 0}
-        function o.Init(p, q)
-            o.Window = q
-            return o
-        end
-        function o.GetCurrentTabPos(p)
-            local q, r = o.Window.TabHolder.AbsolutePosition.Y, o.Tabs[o.SelectedTab].Frame.AbsolutePosition.Y
-            return r - q
-        end
-        
-        -- ฟังก์ชันสร้าง Tab Section
-        function o.AddTabSection(p, q)
-            local sectionData = {
-                Name = q,
-                Collapsed = false,
-                Tabs = {},
-                Type = "TabSection"
-            }
-            
-            -- สร้าง Section Header
-            local sectionHeader = k(
-                "TextButton",
-                {
-                    Size = UDim2.new(1, 0, 0, 28),
-                    BackgroundColor3 = Color3.fromRGB(25, 25, 30),
-                    BackgroundTransparency = 0.5,
-                    Parent = o.Window.TabHolder,
-                    ThemeTag = {BackgroundColor3 = "TabSection"}
-                },
-                {
-                    k("UICorner", {CornerRadius = UDim.new(0, 6)}),
-                    k(
-                        "TextLabel",
-                        {
-                            AnchorPoint = Vector2.new(0, 0.5),
-                            Position = UDim2.new(0, 24, 0.5, 0),
-                            Text = q,
-                            RichText = true,
-                            TextColor3 = Color3.fromRGB(180, 180, 180),
-                            FontFace = Font.new(
-                                "rbxasset://fonts/families/GothamSSm.json",
-                                Enum.FontWeight.Medium,
-                                Enum.FontStyle.Normal
-                            ),
-                            TextSize = 11,
-                            TextXAlignment = "Left",
-                            Size = UDim2.new(1, -30, 1, 0),
-                            BackgroundTransparency = 1,
-                            ThemeTag = {TextColor3 = "SubText"}
-                        }
-                    ),
-                    k(
-                        "TextLabel",
-                        {
-                            Name = "Arrow",
-                            AnchorPoint = Vector2.new(0, 0.5),
-                            Position = UDim2.new(0, 8, 0.5, 0),
-                            Size = UDim2.fromOffset(10, 10),
-                            BackgroundTransparency = 1,
-                            Text = "▼",
-                            TextColor3 = Color3.fromRGB(180, 180, 180),
-                            TextSize = 10,
-                            ThemeTag = {TextColor3 = "SubText"}
-                        }
-                    )
-                }
-            )
-            
-            sectionData.Header = sectionHeader
-            sectionData.Arrow = sectionHeader:FindFirstChild("Arrow")
-            
-            -- สร้าง Container สำหรับ Tabs ภายใน Section
-            local tabContainer = k(
-                "Frame",
-                {
-                    Size = UDim2.new(1, 0, 0, 0),
-                    BackgroundTransparency = 1,
-                    Parent = o.Window.TabHolder,
-                    ClipsDescendants = true
-                },
-                {
-                    k("UIListLayout", {Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder})
-                }
-            )
-            
-            sectionData.Container = tabContainer
-            sectionData.Layout = tabContainer:FindFirstChildOfClass("UIListLayout")
-            
-            -- ฟังก์ชัน Toggle Section
-            function sectionData.Toggle()
-                sectionData.Collapsed = not sectionData.Collapsed
-                
-                if sectionData.Collapsed then
-                    sectionData.Arrow.Text = "▶"
-                    -- ซ่อน Tabs ทั้งหมดใน Section
-                    for _, tab in pairs(sectionData.Tabs) do
-                        tab.Frame.Visible = false
-                    end
-                    sectionData.Container.Size = UDim2.new(1, 0, 0, 0)
-                else
-                    sectionData.Arrow.Text = "▼"
-                    -- แสดง Tabs ทั้งหมดใน Section
-                    for _, tab in pairs(sectionData.Tabs) do
-                        tab.Frame.Visible = true
-                    end
-                    task.wait()
-                    local contentSize = sectionData.Layout.AbsoluteContentSize.Y
-                    sectionData.Container.Size = UDim2.new(1, 0, 0, contentSize + 6)
-                end
-            end
-            
-            j.AddSignal(
-                sectionHeader.MouseButton1Click,
-                function()
-                    sectionData.Toggle()
-                end
-            )
-            
-            -- อัพเดทขนาด Container เมื่อมีการเปลี่ยนแปลง
-            j.AddSignal(
-                sectionData.Layout:GetPropertyChangedSignal("AbsoluteContentSize"),
-                function()
-                    if not sectionData.Collapsed then
-                        sectionData.Container.Size = UDim2.new(1, 0, 0, sectionData.Layout.AbsoluteContentSize.Y + 6)
-                    end
-                end
-            )
-            
-            table.insert(o.TabSections, sectionData)
-            return sectionData
-        end
-        
-        function o.New(p, q, r, s, tabSection)
-            local t, u = e(h), o.Window
-            local v = t.Elements
-            o.TabCount = o.TabCount + 1
-            local w, x = o.TabCount, {Selected = false, Name = q, Type = "Tab"}
-            if t:GetIcon(r) then
-                r = t:GetIcon(r)
-            end
-            if r == "" or nil then
-                r = nil
-            end
-            
-            -- ถ้ามี tabSection ให้ใช้ Container ของ Section แทน
-            local parentContainer = (tabSection and tabSection.Container) or s
-            
-            x.Frame =
-                k(
-                "TextButton",
-                {
-                    Size = UDim2.new(1, 0, 0, 34),
-                    BackgroundTransparency = 1,
-                    Parent = parentContainer,
-                    ThemeTag = {BackgroundColor3 = "Tab"}
-                },
-                {
-                    k("UICorner", {CornerRadius = UDim.new(0, 6)}),
-                    k(
-                        "TextLabel",
-                        {
-                            AnchorPoint = Vector2.new(0, 0.5),
-                            Position = r and UDim2.new(0, 30, 0.5, 0) or UDim2.new(0, 12, 0.5, 0),
-                            Text = q,
-                            RichText = true,
-                            TextColor3 = Color3.fromRGB(255, 255, 255),
-                            TextTransparency = 0,
-                            FontFace = Font.new(
-                                "rbxasset://fonts/families/GothamSSm.json",
-                                Enum.FontWeight.Regular,
-                                Enum.FontStyle.Normal
-                            ),
-                            TextSize = 12,
-                            TextXAlignment = "Left",
-                            TextYAlignment = "Center",
-                            Size = UDim2.new(1, -12, 1, 0),
-                            BackgroundTransparency = 1,
-                            ThemeTag = {TextColor3 = "Text"}
-                        }
-                    ),
-                    k(
-                        "ImageLabel",
-                        {
-                            AnchorPoint = Vector2.new(0, 0.5),
-                            Size = UDim2.fromOffset(16, 16),
-                            Position = UDim2.new(0, 8, 0.5, 0),
-                            BackgroundTransparency = 1,
-                            Image = r and r or nil,
-                            ThemeTag = {ImageColor3 = "Text"}
-                        }
-                    )
-                }
-            )
-            
-            -- เพิ่ม Tab เข้า Section ถ้ามี
-            if tabSection then
-                table.insert(tabSection.Tabs, x)
-                x.Section = tabSection
-            end
-            
-            local y = k("UIListLayout", {Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder})
-            x.ContainerFrame =
-                k(
-                "ScrollingFrame",
-                {
-                    Size = UDim2.fromScale(1, 1),
-                    BackgroundTransparency = 1,
-                    Parent = u.ContainerHolder,
-                    Visible = false,
-                    BottomImage = "rbxassetid://6889812791",
-                    MidImage = "rbxassetid://6889812721",
-                    TopImage = "rbxassetid://6276641225",
-                    ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                    ScrollBarImageTransparency = 0.95,
-                    ScrollBarThickness = 3,
-                    BorderSizePixel = 0,
-                    CanvasSize = UDim2.fromScale(0, 0),
-                    ScrollingDirection = Enum.ScrollingDirection.Y
-                },
-                {
-                    y,
-                    k(
-                        "UIPadding",
-                        {
-                            PaddingRight = UDim.new(0, 10),
-                            PaddingLeft = UDim.new(0, 1),
-                            PaddingTop = UDim.new(0, 1),
-                            PaddingBottom = UDim.new(0, 1)
-                        }
-                    )
-                }
-            )
-            j.AddSignal(
-                y:GetPropertyChangedSignal "AbsoluteContentSize",
-                function()
-                    x.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, y.AbsoluteContentSize.Y + 2)
-                end
-            )
-            x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, "BackgroundTransparency")
-            j.AddSignal(
-                x.Frame.MouseEnter,
-                function()
-                    x.SetTransparency(x.Selected and 0.85 or 0.89)
-                end
-            )
-            j.AddSignal(
-                x.Frame.MouseLeave,
-                function()
-                    x.SetTransparency(x.Selected and 0.89 or 1)
-                end
-            )
-            j.AddSignal(
-                x.Frame.MouseButton1Down,
-                function()
-                    x.SetTransparency(0.92)
-                end
-            )
-            j.AddSignal(
-                x.Frame.MouseButton1Up,
-                function()
-                    x.SetTransparency(x.Selected and 0.85 or 0.89)
-                end
-            )
-            j.AddSignal(
-                x.Frame.MouseButton1Click,
-                function()
-                    o:SelectTab(w)
-                end
-            )
-            o.Containers[w] = x.ContainerFrame
-            o.Tabs[w] = x
-            x.Container = x.ContainerFrame
-            x.ScrollFrame = x.Container
-            function x.AddSection(z, A)
-                local B, C = {Type = "Section"}, e(n.Section)(A, x.Container)
-                B.Container = C.Container
-                B.ScrollFrame = x.Container
-                setmetatable(B, v)
-                return B
-            end
-            setmetatable(x, v)
-            return x
-        end
-        function o.SelectTab(p, q)
-            local r = o.Window
-            o.SelectedTab = q
-            for s, t in next, o.Tabs do
-                t.SetTransparency(1)
-                t.Selected = false
-            end
-            o.Tabs[q].SetTransparency(0.89)
-            o.Tabs[q].Selected = true
-            r.TabDisplay.Text = o.Tabs[q].Name
-            r.SelectorPosMotor:setGoal(l(o:GetCurrentTabPos(), {frequency = 6}))
-            task.spawn(
-                function()
-                    r.ContainerPosMotor:setGoal(l(110, {frequency = 10}))
-                    r.ContainerBackMotor:setGoal(l(1, {frequency = 10}))
-                    task.wait(0.15)
-                    for u, v in next, o.Containers do
-                        v.Visible = false
-                    end
-                    o.Containers[q].Visible = true
-                    r.ContainerPosMotor:setGoal(l(94, {frequency = 5}))
-                    r.ContainerBackMotor:setGoal(l(0, {frequency = 8}))
-                end
-            )
-        end
+    local c, d, e, f, g = b(14)
+    local h = d.Parent.Parent
+    local i, j = e(h.Packages.Flipper), e(h.Creator)
+    local k, l, m, n, o =
+        j.New,
+        i.Spring.new,
+        i.Instant.new,
+        h.Components,
+        {Window = nil, Tabs = {}, Containers = {}, SelectedTab = 0, TabCount = 0}
+    
+    function o.Init(p, q)
+        o.Window = q
         return o
-    end,
+    end
+    
+    function o.GetCurrentTabPos(p)
+        local q, r = o.Window.TabHolder.AbsolutePosition.Y, o.Tabs[o.SelectedTab].Frame.AbsolutePosition.Y
+        return r - q
+    end
+    
+    function o.New(p, q, r, s)
+        local t, u = e(h), o.Window
+        local v = t.Elements
+        o.TabCount = o.TabCount + 1
+        local w, x = o.TabCount, {Selected = false, Name = q, Type = "Tab"}
+        
+        if t:GetIcon(r) then
+            r = t:GetIcon(r)
+        end
+        if r == "" or nil then
+            r = nil
+        end
+        
+        -- สร้าง Tab Frame พร้อม Stroke
+        x.Frame =
+            k(
+            "TextButton",
+            {
+                Size = UDim2.new(1, 0, 0, 34),
+                BackgroundTransparency = 1,
+                Parent = s,
+                ThemeTag = {BackgroundColor3 = "Tab"}
+            },
+            {
+                k("UICorner", {CornerRadius = UDim.new(0, 6)}),
+                k(
+                    "UIStroke",
+                    {
+                        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                        Thickness = 1.5,
+                        Transparency = 0.65,
+                        ThemeTag = {Color = "ElementBorder"}
+                    }
+                ),
+                k(
+                    "TextLabel",
+                    {
+                        AnchorPoint = Vector2.new(0, 0.5),
+                        Position = r and UDim2.new(0, 30, 0.5, 0) or UDim2.new(0, 12, 0.5, 0),
+                        Text = q,
+                        RichText = true,
+                        TextColor3 = Color3.fromRGB(255, 255, 255),
+                        TextTransparency = 0,
+                        FontFace = Font.new(
+                            "rbxasset://fonts/families/GothamSSm.json",
+                            Enum.FontWeight.Regular,
+                            Enum.FontStyle.Normal
+                        ),
+                        TextSize = 12,
+                        TextXAlignment = "Left",
+                        TextYAlignment = "Center",
+                        Size = UDim2.new(1, -12, 1, 0),
+                        BackgroundTransparency = 1,
+                        ThemeTag = {TextColor3 = "Text"}
+                    }
+                ),
+                k(
+                    "ImageLabel",
+                    {
+                        AnchorPoint = Vector2.new(0, 0.5),
+                        Size = UDim2.fromOffset(16, 16),
+                        Position = UDim2.new(0, 8, 0.5, 0),
+                        BackgroundTransparency = 1,
+                        Image = r and r or nil,
+                        ThemeTag = {ImageColor3 = "Text"}
+                    }
+                )
+            }
+        )
+        
+        local y = k("UIListLayout", {Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder})
+        x.ContainerFrame =
+            k(
+            "ScrollingFrame",
+            {
+                Size = UDim2.fromScale(1, 1),
+                BackgroundTransparency = 1,
+                Parent = u.ContainerHolder,
+                Visible = false,
+                BottomImage = "rbxassetid://6889812791",
+                MidImage = "rbxassetid://6889812721",
+                TopImage = "rbxassetid://6276641225",
+                ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageTransparency = 0.95,
+                ScrollBarThickness = 3,
+                BorderSizePixel = 0,
+                CanvasSize = UDim2.fromScale(0, 0),
+                ScrollingDirection = Enum.ScrollingDirection.Y
+            },
+            {
+                y,
+                k(
+                    "UIPadding",
+                    {
+                        PaddingRight = UDim.new(0, 10),
+                        PaddingLeft = UDim.new(0, 1),
+                        PaddingTop = UDim.new(0, 1),
+                        PaddingBottom = UDim.new(0, 1)
+                    }
+                )
+            }
+        )
+        
+        j.AddSignal(
+            y:GetPropertyChangedSignal "AbsoluteContentSize",
+            function()
+                x.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, y.AbsoluteContentSize.Y + 2)
+            end
+        )
+        
+        x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, "BackgroundTransparency")
+        
+        j.AddSignal(
+            x.Frame.MouseEnter,
+            function()
+                x.SetTransparency(x.Selected and 0.85 or 0.89)
+            end
+        )
+        j.AddSignal(
+            x.Frame.MouseLeave,
+            function()
+                x.SetTransparency(x.Selected and 0.89 or 1)
+            end
+        )
+        j.AddSignal(
+            x.Frame.MouseButton1Down,
+            function()
+                x.SetTransparency(0.92)
+            end
+        )
+        j.AddSignal(
+            x.Frame.MouseButton1Up,
+            function()
+                x.SetTransparency(x.Selected and 0.85 or 0.89)
+            end
+        )
+        j.AddSignal(
+            x.Frame.MouseButton1Click,
+            function()
+                o:SelectTab(w)
+            end
+        )
+        
+        o.Containers[w] = x.ContainerFrame
+        o.Tabs[w] = x
+        x.Container = x.ContainerFrame
+        x.ScrollFrame = x.Container
+        
+        function x.AddSection(z, A)
+            local B, C = {Type = "Section"}, e(n.Section)(A, x.Container)
+            B.Container = C.Container
+            B.ScrollFrame = x.Container
+            setmetatable(B, v)
+            return B
+        end
+        
+        setmetatable(x, v)
+        return x
+    end
+    
+    function o.SelectTab(p, q)
+        local r = o.Window
+        o.SelectedTab = q
+        for s, t in next, o.Tabs do
+            t.SetTransparency(1)
+            t.Selected = false
+        end
+        o.Tabs[q].SetTransparency(0.89)
+        o.Tabs[q].Selected = true
+        r.TabDisplay.Text = o.Tabs[q].Name
+        r.SelectorPosMotor:setGoal(l(o:GetCurrentTabPos(), {frequency = 6}))
+        task.spawn(
+            function()
+                r.ContainerPosMotor:setGoal(l(110, {frequency = 10}))
+                r.ContainerBackMotor:setGoal(l(1, {frequency = 10}))
+                task.wait(0.15)
+                for u, v in next, o.Containers do
+                    v.Visible = false
+                end
+                o.Containers[q].Visible = true
+                r.ContainerPosMotor:setGoal(l(94, {frequency = 5}))
+                r.ContainerBackMotor:setGoal(l(0, {frequency = 8}))
+            end
+        )
+    end
+    return o
+end,
     [15] = function()
         local c, d, e, f, g = b(15)
         local h, i = game:GetService "TextService", d.Parent.Parent
