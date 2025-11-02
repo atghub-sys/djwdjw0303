@@ -3064,8 +3064,13 @@ end,
                 else
                     l.Value = nil
                 end
+                
+                -- Update buttons without rebuilding
+                for button, buttonData in pairs(l.Buttons) do
+                    buttonData:UpdateButton()
+                end
+                
                 l:Display()
-                l:BuildDropdownList()
                 k:SafeCallback(l.Callback, l.Value)
                 k:SafeCallback(l.Changed, l.Value)
             end
@@ -3077,20 +3082,18 @@ end,
                 selectAllButton.MouseButton1Click,
                 function()
                     -- Get all visible values (filtered by search)
-                    local visibleValues = {}
                     for _, value in pairs(l.Values) do
                         if l.SearchText == "" or value:lower():find(l.SearchText, 1, true) then
-                            table.insert(visibleValues, value)
+                            l.Value[value] = true
                         end
                     end
                     
-                    -- Select all visible values
-                    for _, value in pairs(visibleValues) do
-                        l.Value[value] = true
+                    -- Update buttons without rebuilding
+                    for button, buttonData in pairs(l.Buttons) do
+                        buttonData:UpdateButton()
                     end
                     
                     l:Display()
-                    l:BuildDropdownList()
                     k:SafeCallback(l.Callback, l.Value)
                     k:SafeCallback(l.Changed, l.Value)
                 end
@@ -3304,6 +3307,7 @@ end,
                     )
                     J:UpdateButton()
                     D[M] = J
+                    l.Buttons[M] = J
                 end
             end
             l:Display()
