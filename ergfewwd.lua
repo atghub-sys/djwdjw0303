@@ -4744,7 +4744,8 @@ end,
                 ["lucide-x-square"] = "rbxassetid://10747384217",
                 ["lucide-zoom-in"] = "rbxassetid://10747384552",
                 ["lucide-zoom-out"] = "rbxassetid://10747384679",
-                ["lucide-castle"] = "rbxassetid://89680811679779"
+                ["lucide-castle"] = "rbxassetid://89680811679779",
+                ["lucide-dog"] = "rbxassetid://128027287498958"
             }
         }
     end,
