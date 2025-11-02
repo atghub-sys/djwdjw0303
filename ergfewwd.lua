@@ -1702,6 +1702,26 @@ end,
                 p.Window:Minimize()
             end
         )
+
+        -- ปุ่มตั้งค่า (Settings) — อยู่ทางซ้ายของปุ่มพับ (Min)
+        o.SettingsButton =
+            q(
+            "rbxassetid://140026929150963",
+            UDim2.new(1, -116, 0, 4),
+            o.Frame,
+            function()
+                if p and p.Window and type(p.Window.OpenSettings) == "function" then
+                    p.Window:OpenSettings()
+                else
+                    p.Window:Dialog {
+                        Title = "Settings",
+                        Content = "No additional settings are implemented yet.",
+                        Buttons = {{Title = "OK"}}
+                    }
+                end
+            end
+        )
+
         return o
     end
 end,
