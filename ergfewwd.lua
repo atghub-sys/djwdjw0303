@@ -1147,213 +1147,190 @@ local aa = {
         end
     end,
     [14] = function()
-    local c, d, e, f, g = b(14)
-    local h = d.Parent.Parent
-    local i, j = e(h.Packages.Flipper), e(h.Creator)
-    local k, l, m, n, o =
-        j.New,
-        i.Spring.new,
-        i.Instant.new,
-        h.Components,
-        {Window = nil, Tabs = {}, Containers = {}, SelectedTab = 0, TabCount = 0}
-    
-    function o.Init(p, q)
-        o.Window = q
-        return o
-    end
-    
-    function o.GetCurrentTabPos(p)
-        local q, r = o.Window.TabHolder.AbsolutePosition.Y, o.Tabs[o.SelectedTab].Frame.AbsolutePosition.Y
-        return r - q
-    end
-    
-    function o.New(p, q, r, s)
-        local t, u = e(h), o.Window
-        local v = t.Elements
-        o.TabCount = o.TabCount + 1
-        local w, x = o.TabCount, {Selected = false, Name = q, Type = "Tab"}
-        
-        if t:GetIcon(r) then
-            r = t:GetIcon(r)
+        local c, d, e, f, g = b(14)
+        local h = d.Parent.Parent
+        local i, j = e(h.Packages.Flipper), e(h.Creator)
+        local k, l, m, n, o =
+            j.New,
+            i.Spring.new,
+            i.Instant.new,
+            h.Components,
+            {Window = nil, Tabs = {}, Containers = {}, SelectedTab = 0, TabCount = 0}
+        function o.Init(p, q)
+            o.Window = q
+            return o
         end
-        if r == "" or nil then
-            r = nil
+        function o.GetCurrentTabPos(p)
+            local q, r = o.Window.TabHolder.AbsolutePosition.Y, o.Tabs[o.SelectedTab].Frame.AbsolutePosition.Y
+            return r - q
         end
-        
-        -- สร้าง Tab Frame พร้อม Stroke
-        x.Frame =
-            k(
-            "TextButton",
-            {
-                Size = UDim2.new(1, 0, 0, 34),
-                BackgroundTransparency = 1,
-                Parent = s,
-                ThemeTag = {BackgroundColor3 = "Tab"}
-            },
-            {
-                k("UICorner", {CornerRadius = UDim.new(0, 6)}),
+        function o.New(p, q, r, s)
+            local t, u = e(h), o.Window
+            local v = t.Elements
+            o.TabCount = o.TabCount + 1
+            local w, x = o.TabCount, {Selected = false, Name = q, Type = "Tab"}
+            if t:GetIcon(r) then
+                r = t:GetIcon(r)
+            end
+            if r == "" or nil then
+                r = nil
+            end
+            x.Frame =
                 k(
-                    "UIStroke",
-                    {
-                        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                        Thickness = 1.5,
-                        Transparency = 0.65,
-                        ThemeTag = {Color = "ElementBorder"}
-                    }
-                ),
+                "TextButton",
+                {
+                    Size = UDim2.new(1, 0, 0, 34),
+                    BackgroundTransparency = 1,
+                    Parent = s,
+                    ThemeTag = {BackgroundColor3 = "Tab"}
+                },
+                {
+                    k("UICorner", {CornerRadius = UDim.new(0, 6)}),
+                    k(
+                        "TextLabel",
+                        {
+                            AnchorPoint = Vector2.new(0, 0.5),
+                            Position = r and UDim2.new(0, 30, 0.5, 0) or UDim2.new(0, 12, 0.5, 0),
+                            Text = q,
+                            RichText = true,
+                            TextColor3 = Color3.fromRGB(255, 255, 255),
+                            TextTransparency = 0,
+                            FontFace = Font.new(
+                                "rbxasset://fonts/families/GothamSSm.json",
+                                Enum.FontWeight.Regular,
+                                Enum.FontStyle.Normal
+                            ),
+                            TextSize = 12,
+                            TextXAlignment = "Left",
+                            TextYAlignment = "Center",
+                            Size = UDim2.new(1, -12, 1, 0),
+                            BackgroundTransparency = 1,
+                            ThemeTag = {TextColor3 = "Text"}
+                        }
+                    ),
+                    k(
+                        "ImageLabel",
+                        {
+                            AnchorPoint = Vector2.new(0, 0.5),
+                            Size = UDim2.fromOffset(16, 16),
+                            Position = UDim2.new(0, 8, 0.5, 0),
+                            BackgroundTransparency = 1,
+                            Image = r and r or nil,
+                            ThemeTag = {ImageColor3 = "Text"}
+                        }
+                    )
+                }
+            )
+            local y = k("UIListLayout", {Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder})
+            x.ContainerFrame =
                 k(
-                    "TextLabel",
-                    {
-                        AnchorPoint = Vector2.new(0, 0.5),
-                        Position = r and UDim2.new(0, 30, 0.5, 0) or UDim2.new(0, 12, 0.5, 0),
-                        Text = q,
-                        RichText = true,
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        TextTransparency = 0,
-                        FontFace = Font.new(
-                            "rbxasset://fonts/families/GothamSSm.json",
-                            Enum.FontWeight.Regular,
-                            Enum.FontStyle.Normal
-                        ),
-                        TextSize = 12,
-                        TextXAlignment = "Left",
-                        TextYAlignment = "Center",
-                        Size = UDim2.new(1, -12, 1, 0),
-                        BackgroundTransparency = 1,
-                        ThemeTag = {TextColor3 = "Text"}
-                    }
-                ),
-                k(
-                    "ImageLabel",
-                    {
-                        AnchorPoint = Vector2.new(0, 0.5),
-                        Size = UDim2.fromOffset(16, 16),
-                        Position = UDim2.new(0, 8, 0.5, 0),
-                        BackgroundTransparency = 1,
-                        Image = r and r or nil,
-                        ThemeTag = {ImageColor3 = "Text"}
-                    }
-                )
-            }
-        )
-        
-        local y = k("UIListLayout", {Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder})
-        x.ContainerFrame =
-            k(
-            "ScrollingFrame",
-            {
-                Size = UDim2.fromScale(1, 1),
-                BackgroundTransparency = 1,
-                Parent = u.ContainerHolder,
-                Visible = false,
-                BottomImage = "rbxassetid://6889812791",
-                MidImage = "rbxassetid://6889812721",
-                TopImage = "rbxassetid://6276641225",
-                ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageTransparency = 0.95,
-                ScrollBarThickness = 3,
-                BorderSizePixel = 0,
-                CanvasSize = UDim2.fromScale(0, 0),
-                ScrollingDirection = Enum.ScrollingDirection.Y
-            },
-            {
-                y,
-                k(
-                    "UIPadding",
-                    {
-                        PaddingRight = UDim.new(0, 10),
-                        PaddingLeft = UDim.new(0, 1),
-                        PaddingTop = UDim.new(0, 1),
-                        PaddingBottom = UDim.new(0, 1)
-                    }
-                )
-            }
-        )
-        
-        j.AddSignal(
-            y:GetPropertyChangedSignal "AbsoluteContentSize",
-            function()
-                x.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, y.AbsoluteContentSize.Y + 2)
-            end
-        )
-        
-        x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, "BackgroundTransparency")
-        
-        j.AddSignal(
-            x.Frame.MouseEnter,
-            function()
-                x.SetTransparency(x.Selected and 0.85 or 0.89)
-            end
-        )
-        j.AddSignal(
-            x.Frame.MouseLeave,
-            function()
-                x.SetTransparency(x.Selected and 0.89 or 1)
-            end
-        )
-        j.AddSignal(
-            x.Frame.MouseButton1Down,
-            function()
-                x.SetTransparency(0.92)
-            end
-        )
-        j.AddSignal(
-            x.Frame.MouseButton1Up,
-            function()
-                x.SetTransparency(x.Selected and 0.85 or 0.89)
-            end
-        )
-        j.AddSignal(
-            x.Frame.MouseButton1Click,
-            function()
-                o:SelectTab(w)
-            end
-        )
-        
-        o.Containers[w] = x.ContainerFrame
-        o.Tabs[w] = x
-        x.Container = x.ContainerFrame
-        x.ScrollFrame = x.Container
-        
-        function x.AddSection(z, A)
-            local B, C = {Type = "Section"}, e(n.Section)(A, x.Container)
-            B.Container = C.Container
-            B.ScrollFrame = x.Container
-            setmetatable(B, v)
-            return B
-        end
-        
-        setmetatable(x, v)
-        return x
-    end
-    
-    function o.SelectTab(p, q)
-        local r = o.Window
-        o.SelectedTab = q
-        for s, t in next, o.Tabs do
-            t.SetTransparency(1)
-            t.Selected = false
-        end
-        o.Tabs[q].SetTransparency(0.89)
-        o.Tabs[q].Selected = true
-        r.TabDisplay.Text = o.Tabs[q].Name
-        r.SelectorPosMotor:setGoal(l(o:GetCurrentTabPos(), {frequency = 6}))
-        task.spawn(
-            function()
-                r.ContainerPosMotor:setGoal(l(110, {frequency = 10}))
-                r.ContainerBackMotor:setGoal(l(1, {frequency = 10}))
-                task.wait(0.15)
-                for u, v in next, o.Containers do
-                    v.Visible = false
+                "ScrollingFrame",
+                {
+                    Size = UDim2.fromScale(1, 1),
+                    BackgroundTransparency = 1,
+                    Parent = u.ContainerHolder,
+                    Visible = false,
+                    BottomImage = "rbxassetid://6889812791",
+                    MidImage = "rbxassetid://6889812721",
+                    TopImage = "rbxassetid://6276641225",
+                    ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
+                    ScrollBarImageTransparency = 0.95,
+                    ScrollBarThickness = 3,
+                    BorderSizePixel = 0,
+                    CanvasSize = UDim2.fromScale(0, 0),
+                    ScrollingDirection = Enum.ScrollingDirection.Y
+                },
+                {
+                    y,
+                    k(
+                        "UIPadding",
+                        {
+                            PaddingRight = UDim.new(0, 10),
+                            PaddingLeft = UDim.new(0, 1),
+                            PaddingTop = UDim.new(0, 1),
+                            PaddingBottom = UDim.new(0, 1)
+                        }
+                    )
+                }
+            )
+            j.AddSignal(
+                y:GetPropertyChangedSignal "AbsoluteContentSize",
+                function()
+                    x.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, y.AbsoluteContentSize.Y + 2)
                 end
-                o.Containers[q].Visible = true
-                r.ContainerPosMotor:setGoal(l(94, {frequency = 5}))
-                r.ContainerBackMotor:setGoal(l(0, {frequency = 8}))
+            )
+            x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, "BackgroundTransparency")
+            j.AddSignal(
+                x.Frame.MouseEnter,
+                function()
+                    x.SetTransparency(x.Selected and 0.85 or 0.89)
+                end
+            )
+            j.AddSignal(
+                x.Frame.MouseLeave,
+                function()
+                    x.SetTransparency(x.Selected and 0.89 or 1)
+                end
+            )
+            j.AddSignal(
+                x.Frame.MouseButton1Down,
+                function()
+                    x.SetTransparency(0.92)
+                end
+            )
+            j.AddSignal(
+                x.Frame.MouseButton1Up,
+                function()
+                    x.SetTransparency(x.Selected and 0.85 or 0.89)
+                end
+            )
+            j.AddSignal(
+                x.Frame.MouseButton1Click,
+                function()
+                    o:SelectTab(w)
+                end
+            )
+            o.Containers[w] = x.ContainerFrame
+            o.Tabs[w] = x
+            x.Container = x.ContainerFrame
+            x.ScrollFrame = x.Container
+            function x.AddSection(z, A)
+                local B, C = {Type = "Section"}, e(n.Section)(A, x.Container)
+                B.Container = C.Container
+                B.ScrollFrame = x.Container
+                setmetatable(B, v)
+                return B
             end
-        )
-    end
-    return o
-end,
+            setmetatable(x, v)
+            return x
+        end
+        function o.SelectTab(p, q)
+            local r = o.Window
+            o.SelectedTab = q
+            for s, t in next, o.Tabs do
+                t.SetTransparency(1)
+                t.Selected = false
+            end
+            o.Tabs[q].SetTransparency(0.89)
+            o.Tabs[q].Selected = true
+            r.TabDisplay.Text = o.Tabs[q].Name
+            r.SelectorPosMotor:setGoal(l(o:GetCurrentTabPos(), {frequency = 6}))
+            task.spawn(
+                function()
+                    r.ContainerPosMotor:setGoal(l(110, {frequency = 10}))
+                    r.ContainerBackMotor:setGoal(l(1, {frequency = 10}))
+                    task.wait(0.15)
+                    for u, v in next, o.Containers do
+                        v.Visible = false
+                    end
+                    o.Containers[q].Visible = true
+                    r.ContainerPosMotor:setGoal(l(94, {frequency = 5}))
+                    r.ContainerBackMotor:setGoal(l(0, {frequency = 8}))
+                end
+            )
+        end
+        return o
+    end,
     [15] = function()
         local c, d, e, f, g = b(15)
         local h, i = game:GetService "TextService", d.Parent.Parent
@@ -2751,7 +2728,6 @@ end,
     local e, f, g = c.New, aj.Components, {}
     g.__index = g
     g.__type = "Dropdown"
-    
     function g.New(h, i, j)
         local k, l, m =
             h.Library,
@@ -2770,7 +2746,6 @@ end,
         m.DescLabel.Size = UDim2.new(1, -170, 0, 14)
         l.SetTitle = m.SetTitle
         l.SetDesc = m.SetDesc
-        
         local n, o =
             e(
                 "TextLabel",
@@ -2804,7 +2779,6 @@ end,
                     ThemeTag = {ImageColor3 = "SubText"}
                 }
             )
-        
         local p =
             e(
                 "TextButton",
@@ -2861,7 +2835,7 @@ end,
             }
         )
         
-        -- Clear Button
+        -- Clear Button (X)
         local clearButton = e(
             "TextButton",
             {
@@ -2890,6 +2864,7 @@ end,
         
         -- Select All Button (เฉพาะ Multi-select)
         local selectAllButton = nil
+        
         if j.Multi then
             selectAllButton = e(
                 "TextButton",
@@ -2917,9 +2892,7 @@ end,
             )
         end
         
-        -- UIListLayout with increased spacing
-        local s = e("UIListLayout", {Padding = UDim.new(0, 4)})
-        
+        local s = e("UIListLayout", {Padding = UDim.new(0, 3)})
         local scrollYPos = j.Multi and 73 or 40
         local scrollYSize = j.Multi and -78 or -45
         
@@ -2981,32 +2954,39 @@ end,
             e(
             "Frame",
             {
-                BackgroundTransparency = 1,
-                Size = UDim2.fromOffset(170, 250),
-                Parent = h.Library.GUI,
+                BackgroundTransparency = 1, 
+                Size = UDim2.fromOffset(170, 250), 
+                Parent = h.Library.GUI, 
                 Visible = false
             },
             {u, e("UISizeConstraint", {MinSize = Vector2.new(170, 0), MaxSize = Vector2.new(250, 300)})}
         )
         table.insert(k.OpenFrames, v)
         
-        -- Position dropdown
+        -- Position dropdown with smart positioning
         local w = function()
             local mainFrame = p.AbsolutePosition
             local mainSize = p.AbsoluteSize
             local dropdownWidth = 170
             local viewportSize = ai.ViewportSize
             
+            -- Try right side first
             local xPos = mainFrame.X + mainSize.X + 10
+            
+            -- If goes off screen on right, try left side
             if xPos + dropdownWidth > viewportSize.X then
                 xPos = mainFrame.X - dropdownWidth - 10
             end
+            
+            -- If still off screen on left, clamp to screen
             if xPos < 0 then
                 xPos = math.min(mainFrame.X + mainSize.X + 10, viewportSize.X - dropdownWidth - 10)
                 xPos = math.max(xPos, 10)
             end
             
             local yPos = mainFrame.Y - 5
+            
+            -- Make sure Y position is within screen
             local maxY = viewportSize.Y - v.AbsoluteSize.Y - 10
             if yPos > maxY then
                 yPos = maxY
@@ -3020,7 +3000,7 @@ end,
         
         local x = 170
         local y = function()
-            local maxHeight = 260
+            local maxHeight = 230
             local contentHeight = s.AbsoluteContentSize.Y + (j.Multi and 83 or 50)
             local finalHeight = math.min(contentHeight, maxHeight)
             v.Size = UDim2.fromOffset(x, finalHeight)
@@ -3034,6 +3014,7 @@ end,
         y()
         c.AddSignal(p:GetPropertyChangedSignal "AbsolutePosition", w)
         
+        -- Toggle dropdown on click
         c.AddSignal(
             p.MouseButton1Click,
             function()
@@ -3053,6 +3034,7 @@ end,
                         local B, C = u.AbsolutePosition, u.AbsoluteSize
                         local pB, pC = p.AbsolutePosition, p.AbsoluteSize
                         
+                        -- Check if click is outside dropdown and outside button
                         local outsideDropdown = ah.X < B.X or ah.X > B.X + C.X or ah.Y < B.Y or ah.Y > B.Y + C.Y
                         local outsideButton = ah.X < pB.X or ah.X > pB.X + pC.X or ah.Y < pB.Y or ah.Y > pB.Y + pC.Y
                         
@@ -3064,6 +3046,7 @@ end,
             end
         )
         
+        -- Search functionality
         c.AddSignal(
             searchBox:GetPropertyChangedSignal("Text"),
             function()
@@ -3072,6 +3055,7 @@ end,
             end
         )
         
+        -- Clear button functionality
         c.AddSignal(
             clearButton.MouseButton1Click,
             function()
@@ -3081,6 +3065,7 @@ end,
                     l.Value = nil
                 end
                 
+                -- Update buttons without rebuilding
                 for button, buttonData in pairs(l.Buttons) do
                     buttonData:UpdateButton()
                 end
@@ -3091,16 +3076,19 @@ end,
             end
         )
         
+        -- Select All button functionality
         if j.Multi and selectAllButton then
             c.AddSignal(
                 selectAllButton.MouseButton1Click,
                 function()
+                    -- Get all visible values (filtered by search)
                     for _, value in pairs(l.Values) do
                         if l.SearchText == "" or value:lower():find(l.SearchText, 1, true) then
                             l.Value[value] = true
                         end
                     end
                     
+                    -- Update buttons without rebuilding
                     for button, buttonData in pairs(l.Buttons) do
                         buttonData:UpdateButton()
                     end
@@ -3163,7 +3151,6 @@ end,
             n.Text = (D == "" and "--" or D)
             clearButton.Visible = hasSelection
         end
-        
         function l.GetActiveValues(B)
             if j.Multi then
                 local C = {}
@@ -3175,7 +3162,6 @@ end,
                 return l.Value and 1 or 0
             end
         end
-        
         function l.BuildDropdownList(B)
             local C, D = l.Values, {}
             for E, F in next, t:GetChildren() do
@@ -3194,7 +3180,7 @@ end,
                             {
                                 Size = UDim2.fromOffset(4, 14),
                                 BackgroundColor3 = Color3.fromRGB(76, 194, 255),
-                                Position = UDim2.fromOffset(-1, 14),
+                                Position = UDim2.fromOffset(-1, 16),
                                 AnchorPoint = Vector2.new(0, 0.5),
                                 ThemeTag = {BackgroundColor3 = "Accent"}
                             },
@@ -3206,15 +3192,13 @@ end,
                                 FontFace = Font.new "rbxasset://fonts/families/GothamSSm.json",
                                 Text = I,
                                 TextColor3 = Color3.fromRGB(200, 200, 200),
-                                TextSize = 12,
-                                TextXAlignment = Enum.TextXAlignment.Center,
-                                TextYAlignment = Enum.TextYAlignment.Center,
+                                TextSize = 13,
+                                TextXAlignment = Enum.TextXAlignment.Left,
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 AutomaticSize = Enum.AutomaticSize.Y,
                                 BackgroundTransparency = 1,
                                 Size = UDim2.fromScale(1, 1),
-                                Position = UDim2.fromScale(0.5, 0.5),
-                                AnchorPoint = Vector2.new(0.5, 0.5),
+                                Position = UDim2.fromOffset(10, 0),
                                 Name = "ButtonLabel",
                                 ThemeTag = {TextColor3 = "Text"}
                             }
@@ -3233,7 +3217,7 @@ end,
                         {
                             K, 
                             L, 
-                            e("UICorner", {CornerRadius = UDim.new(0, 5)}),
+                            e("UICorner", {CornerRadius = UDim.new(0, 6)}),
                             e(
                                 "UIStroke",
                                 {
@@ -3330,19 +3314,16 @@ end,
             z()
             y()
         end
-        
         function l.SetValues(B, C)
             if C then
                 l.Values = C
             end
             l:BuildDropdownList()
         end
-        
         function l.OnChanged(B, C)
             l.Changed = C
             C(l.Value)
         end
-        
         function l.SetValue(B, C)
             if l.Multi then
                 local D = {}
@@ -3363,12 +3344,10 @@ end,
             k:SafeCallback(l.Callback, l.Value)
             k:SafeCallback(l.Changed, l.Value)
         end
-        
         function l.Destroy(B)
             m:Destroy()
             k.Options[i] = nil
         end
-        
         l:BuildDropdownList()
         l:Display()
         local B = {}
