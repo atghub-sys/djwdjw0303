@@ -3325,7 +3325,7 @@ end,
                         (e(
                         "TextButton",
                         {
-                            Size = UDim2.new(1, -10, 0, 25),
+                            Size = UDim2.new(1, -10, 0, 32),
                             BackgroundTransparency = 1,
                             ZIndex = 23,
                             Text = "",
